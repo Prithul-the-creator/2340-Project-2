@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6">
+    <div class="page-header flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="page-title">{{ template_data.profile.display_name }}</h1>
+        <p class="page-desc">{{ template_data.profile.headline }}</p>
+      </div>
+      {% if template_data.profile.user.email %}
+        <a class="btn-outline" href="mailto:{{ template_data.profile.user.email }}">Contact</a>
+      {% endif %}
+    </div>
+
+    <div class="card mb-4">
+      {% if template_data.profile.location %}<p class="text-sm text-muted-foreground">{{ template_data.profile.location }}</p>{% endif %}
+      {% if template_data.profile.bio %}<p class="mt-2 text-muted-foreground">{{ template_data.profile.bio }}</p>{% endif %}
+      <div class="mt-3 flex flex-wrap gap-1.5">
+        {% for skill in template_data.profile.skills.all %}<span class="chip-accent">{{ skill.name }}</span>{% endfor %}
+      </div>
+    </div>
+
+    <h2 class="section-label">Education</h2>
+    <div class="card mb-2">
+      {% for edu in template_data.profile.educations.all %}
+        <div class="mb-3 last:mb-0">
+          <div class="font-semibold text-navy">{{ edu.school }}</div>
+          <div class="text-sm text-muted-foreground">{{ edu.degree }} {% if edu.field %}· {{ edu.field }}{% endif %} {% if edu.graduation_year %}· {{ edu.graduation_year }}{% endif %}</div>
+        </div>
+      {% empty %}<p class="text-sm text-muted-foreground">No education listed.</p>{% endfor %}
+    </div>
+
+    <h2 class="section-label">Experience</h2>
+    <div class="card mb-2">
+      {% for exp in template_data.profile.experiences.all %}
+        <div class="mb-3 last:mb-0">
+          <div class="font-semibold text-navy">{{ exp.title }}</div>
+          <div class="text-sm text-muted-foreground">{{ exp.company }}</div>
+          {% if exp.description %}<p class="mt-1 text-sm text-muted-foreground">{{ exp.description }}</p>{% endif %}
+        </div>
+      {% empty %}<p class="text-sm text-muted-foreground">No experience listed.</p>{% endfor %}
+    </div>
+
+    <h2 class="section-label">Projects</h2>
+    <div class="card mb-2">
+      {% for project in template_data.profile.projects.all %}
+        <div class="mb-3 last:mb-0">
+          <div class="font-semibold text-navy">{{ project.name }}</div>
+          {% if project.description %}<p class="mt-1 text-sm text-muted-foreground">{{ project.description }}</p>{% endif %}
+        </div>
+      {% empty %}<p class="text-sm text-muted-foreground">No projects listed.</p>{% endfor %}
+    </div>
+
+    {% if template_data.applications %}
+    <h2 class="section-label">Applications to your jobs</h2>
+    <div class="card">
+      {% for app in template_data.applications %}
+        <div class="mb-2 flex flex-wrap items-center gap-2 last:mb-0">
+          <a href="{% url 'jobs.applicants' app.job.pk %}?app={{ app.pk }}">{{ app.job.title }}</a>
+          <span class="status status-{{ app.status|lower }}">{{ app.get_status_display }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock content %}

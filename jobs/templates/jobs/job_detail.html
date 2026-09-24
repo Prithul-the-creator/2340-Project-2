@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6">
+    <div class="page-header">
+      <h1 class="page-title">{{ template_data.job.title }}</h1>
+      <p class="page-desc">
+        {{ template_data.job.company }}
+        {% if template_data.job.location %} · {{ template_data.job.location }}{% endif %}
+        · {{ template_data.job.get_work_model_display }}
+        · {{ template_data.job.get_employment_type_display }}
+      </p>
+    </div>
+
+    <div class="card mb-4">
+      <div class="mb-4 flex flex-wrap gap-1.5">
+        {% for skill in template_data.job.skills.all %}<span class="chip-accent">{{ skill.name }}</span>{% endfor %}
+        <span class="chip">Visa: {{ template_data.job.get_visa_sponsorship_display }}</span>
+        {% if template_data.job.salary_min or template_data.job.salary_max %}
+          <span class="chip">
+            {% if template_data.job.salary_min and template_data.job.salary_max %}
+              ${{ template_data.job.salary_min }}–${{ template_data.job.salary_max }}
+            {% elif template_data.job.salary_min %}
+              ${{ template_data.job.salary_min }}+
+            {% else %}
+              Up to ${{ template_data.job.salary_max }}
+            {% endif %}
+            {{ template_data.job.get_salary_unit_display|lower }}
+          </span>
+        {% endif %}
+      </div>
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">About the role</h2>
+      <p class="mt-2 leading-relaxed text-muted-foreground">{{ template_data.job.description|linebreaksbr }}</p>
+      {% if template_data.job.responsibilities %}
+        <h2 class="mt-6 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Responsibilities</h2>
+        <p class="mt-2 leading-relaxed text-muted-foreground">{{ template_data.job.responsibilities|linebreaksbr }}</p>
+      {% endif %}
+      {% if template_data.job.qualifications %}
+        <h2 class="mt-6 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Qualifications</h2>
+        <p class="mt-2 leading-relaxed text-muted-foreground">{{ template_data.job.qualifications|linebreaksbr }}</p>
+      {% endif %}
+    </div>
+
+    {% if template_data.existing_application %}
+      <div class="card">
+        <p class="text-muted-foreground">You applied on {{ template_data.existing_application.created_at|date:"M j, Y" }}.</p>
+        <span class="status status-{{ template_data.existing_application.status|lower }} mt-3">{{ template_data.existing_application.get_status_display }}</span>
+        <div class="mt-4">
+          <a class="btn-outline" href="{% url 'jobs.application_detail' template_data.existing_application.pk %}">View application</a>
+        </div>
+      </div>
+    {% elif template_data.can_apply %}
+      <div class="card">
+        <h2 class="text-lg font-semibold text-navy">Apply</h2>
+        <p class="mt-2 text-sm text-muted-foreground">Your Seekr profile{% if user_profile.resume %} and resume{% endif %} will be shared with the recruiter.</p>
+        <form method="POST" action="{% url 'jobs.apply' template_data.job.pk %}" class="mt-4 space-y-4">
+          {% csrf_token %}
+          <div>
+            <label class="label" for="{{ template_data.apply_form.note.id_for_label }}">Note (optional)</label>
+            {{ template_data.apply_form.note }}
+          </div>
+          <button type="submit" class="btn-solid">Submit application</button>
+        </form>
+      </div>
+    {% elif not user.is_authenticated %}
+      <div class="card">
+        <p class="mb-4 text-muted-foreground">Log in as a job seeker to apply.</p>
+        <a class="btn-solid" href="{% url 'accounts.login' %}">Log in</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock content %}

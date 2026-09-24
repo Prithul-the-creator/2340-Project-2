@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <div class="page-header">
+      <h1 class="page-title">Jobs</h1>
+      <p class="page-desc">Explore openings that match your skills, location, and preferences.</p>
+      <span class="chip-accent mt-3">{{ template_data.result_count }} opening{{ template_data.result_count|pluralize }}</span>
+    </div>
+
+    <form class="card mb-6" method="GET">
+      <div class="grid gap-3 md:grid-cols-3">
+        <div>
+          <label class="label-caps">Search</label>
+          <input class="field" type="text" name="q" value="{{ template_data.filters.q }}" placeholder="Title or company">
+        </div>
+        <div>
+          <label class="label-caps">Location</label>
+          <input class="field" type="text" name="location" value="{{ template_data.filters.location }}" placeholder="City or region">
+        </div>
+        <div>
+          <label class="label-caps">Skills</label>
+          <input class="field" type="text" name="skills" value="{{ template_data.filters.skills }}" placeholder="Python, React">
+        </div>
+        <div>
+          <label class="label-caps">Work model</label>
+          <select class="field" name="work_model">
+            <option value="">Any</option>
+            <option value="REMOTE" {% if template_data.filters.work_model == 'REMOTE' %}selected{% endif %}>Remote</option>
+            <option value="HYBRID" {% if template_data.filters.work_model == 'HYBRID' %}selected{% endif %}>Hybrid</option>
+            <option value="ONSITE" {% if template_data.filters.work_model == 'ONSITE' %}selected{% endif %}>On-site</option>
+          </select>
+        </div>
+        <div>
+          <label class="label-caps">Visa sponsorship</label>
+          <select class="field" name="visa">
+            <option value="">Any</option>
+            <option value="AVAILABLE" {% if template_data.filters.visa == 'AVAILABLE' %}selected{% endif %}>Available</option>
+            <option value="NOT_AVAILABLE" {% if template_data.filters.visa == 'NOT_AVAILABLE' %}selected{% endif %}>No</option>
+            <option value="NOT_PROVIDED" {% if template_data.filters.visa == 'NOT_PROVIDED' %}selected{% endif %}>Not provided</option>
+          </select>
+        </div>
+        <div>
+          <label class="label-caps">Sort</label>
+          <select class="field" name="sort">
+            <option value="newest" {% if template_data.filters.sort == 'newest' %}selected{% endif %}>Newest</option>
+            <option value="salary" {% if template_data.filters.sort == 'salary' %}selected{% endif %}>Salary</option>
+          </select>
+        </div>
+        <div>
+          <label class="label-caps">Min salary</label>
+          <input class="field" type="number" name="salary_min" value="{{ template_data.filters.salary_min }}">
+        </div>
+        <div>
+          <label class="label-caps">Max salary</label>
+          <input class="field" type="number" name="salary_max" value="{{ template_data.filters.salary_max }}">
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button class="btn-solid" type="submit">Apply filters</button>
+        <a class="btn-ghost" href="{% url 'jobs.list' %}">Clear</a>
+      </div>
+    </form>
+
+    <div class="space-y-3">
+      {% for job in template_data.jobs %}
+      <article class="card-interactive">
+        <h3 class="text-lg font-semibold tracking-tight">
+          <a href="{% url 'jobs.detail' job.pk %}" class="text-navy hover:text-blue">{{ job.title }}</a>
+        </h3>
+        <p class="mt-1 text-sm text-muted-foreground">
+          {{ job.company }}
+          {% if job.location %} · {{ job.location }}{% endif %}
+          · {{ job.get_work_model_display }}
+          · {{ job.get_employment_type_display }}
+        </p>
+        {% if job.salary_min or job.salary_max %}
+          <p class="mt-1 text-sm text-muted-foreground">
+            {% if job.salary_min and job.salary_max %}${{ job.salary_min }}–${{ job.salary_max }}
+            {% elif job.salary_min %}${{ job.salary_min }}+
+            {% else %}Up to ${{ job.salary_max }}{% endif %}
+            {{ job.get_salary_unit_display|lower }}
+          </p>
+        {% endif %}
+        <div class="mt-3 flex flex-wrap gap-1.5">
+          {% for skill in job.skills.all %}<span class="chip-accent">{{ skill.name }}</span>{% endfor %}
+          {% if job.visa_sponsorship == 'AVAILABLE' %}<span class="chip-accent">Visa sponsorship</span>{% endif %}
+        </div>
+      </article>
+      {% empty %}
+      <div class="empty">
+        <h3>No jobs match</h3>
+        <p>Try clearing filters or checking back later.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

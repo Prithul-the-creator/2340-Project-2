@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-2xl px-4 sm:px-6">
+    <div class="page-header">
+      <h1 class="page-title">{{ template_data.title }}</h1>
+      <p class="page-desc">Write a clear role description so candidates know what to expect.</p>
+    </div>
+    <div class="card">
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        {% for field in template_data.form %}
+          <div>
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="mt-1 text-xs text-muted-foreground">{{ field.help_text }}</p>{% endif %}
+            {% if field.errors %}<p class="mt-1 text-sm text-failed">{{ field.errors|striptags }}</p>{% endif %}
+          </div>
+        {% endfor %}
+        <div class="flex flex-wrap gap-2 pt-2">
+          <button type="submit" class="btn-solid">Save job</button>
+          <a class="btn-ghost" href="{% url 'jobs.recruiter_jobs' %}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock content %}

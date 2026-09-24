@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-2xl px-4 sm:px-6">
+    <div class="page-header">
+      <h1 class="page-title">{{ template_data.application.job.title }}</h1>
+      <p class="page-desc">{{ template_data.application.job.company }}</p>
+    </div>
+    <div class="card mb-4">
+      <span class="status status-{{ template_data.application.status|lower }}">{{ template_data.application.get_status_display }}</span>
+      <p class="mt-3 text-sm text-muted-foreground">Last updated {{ template_data.application.status_updated_at|date:"M j, Y" }}</p>
+    </div>
+    {% if template_data.application.note %}
+    <div class="card mb-4">
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Your note</h2>
+      <p class="mt-2 text-muted-foreground">{{ template_data.application.note }}</p>
+    </div>
+    {% endif %}
+    <div class="card">
+      <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Status timeline</h2>
+      <ul class="space-y-4 border-l-2 border-blue/20 pl-5">
+        <li class="relative">
+          <span class="absolute -left-[1.6rem] top-1 h-3 w-3 rounded-full border-2 border-blue/20 bg-blue"></span>
+          <strong class="text-navy">Applied</strong>
+          <div class="text-sm text-muted-foreground">{{ template_data.application.created_at|date:"M j, Y g:i A" }}</div>
+        </li>
+        {% if template_data.application.status != 'APPLIED' %}
+        <li class="relative">
+          <span class="absolute -left-[1.6rem] top-1 h-3 w-3 rounded-full border-2 border-blue/20 bg-blue"></span>
+          <strong class="text-navy">{{ template_data.application.get_status_display }}</strong>
+          <div class="text-sm text-muted-foreground">Updated {{ template_data.application.status_updated_at|date:"M j, Y g:i A" }}</div>
+        </li>
+        {% endif %}
+      </ul>
+      <a class="btn-outline mt-6 inline-flex" href="{% url 'jobs.detail' template_data.application.job.pk %}">View job</a>
+    </div>
+  </div>
+</div>
+{% endblock content %}

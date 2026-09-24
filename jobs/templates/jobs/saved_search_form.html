@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-lg px-4 sm:px-6">
+    <div class="page-header">
+      <h1 class="page-title">Save search</h1>
+      <p class="page-desc">{{ template_data.match_count }} current match{{ template_data.match_count|pluralize }} with these filters.</p>
+    </div>
+    <div class="card mb-4">
+      <div class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Filters</div>
+      <div class="flex flex-wrap gap-1.5">
+        {% for key, value in template_data.filters.items %}
+          {% if value %}<span class="chip">{{ key }}: {{ value }}</span>{% endif %}
+        {% empty %}
+          <span class="text-sm text-muted-foreground">No filters</span>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card">
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        {% for field in template_data.form %}
+          {% if field.name == 'notify_email' or field.name == 'notify_in_app' %}
+            <label class="flex items-center gap-2 text-sm text-navy">
+              {{ field }}
+              <span>{{ field.label }}</span>
+            </label>
+          {% else %}
+            <div>
+              <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            </div>
+          {% endif %}
+        {% endfor %}
+        <div class="flex flex-wrap gap-2">
+          <button type="submit" class="btn-solid">Save search</button>
+          <a class="btn-ghost" href="{% url 'jobs.candidates' %}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock content %}

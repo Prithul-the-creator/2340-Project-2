@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <div class="page-header flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="page-title">Candidates</h1>
+        <p class="page-desc">Search by skills, location, school, and projects.</p>
+        <span class="chip-accent mt-3">{{ template_data.result_count }} candidate{{ template_data.result_count|pluralize }}</span>
+      </div>
+      <a class="btn-outline" href="{% url 'jobs.saved_search_create' %}?q={{ template_data.filters.q|urlencode }}&skills={{ template_data.filters.skills|urlencode }}&location={{ template_data.filters.location|urlencode }}&school={{ template_data.filters.school|urlencode }}&graduation_year={{ template_data.filters.graduation_year|urlencode }}&projects={{ template_data.filters.projects|urlencode }}">Save this search</a>
+    </div>
+
+    <form class="card mb-6" method="GET">
+      <div class="grid gap-3 md:grid-cols-3">
+        <div>
+          <label class="label-caps">Search</label>
+          <input class="field" name="q" value="{{ template_data.filters.q }}" placeholder="Name or headline">
+        </div>
+        <div>
+          <label class="label-caps">Skills</label>
+          <input class="field" name="skills" value="{{ template_data.filters.skills }}" placeholder="Python, SQL">
+        </div>
+        <div>
+          <label class="label-caps">Location</label>
+          <input class="field" name="location" value="{{ template_data.filters.location }}">
+        </div>
+        <div>
+          <label class="label-caps">School</label>
+          <input class="field" name="school" value="{{ template_data.filters.school }}">
+        </div>
+        <div>
+          <label class="label-caps">Graduation year</label>
+          <input class="field" name="graduation_year" value="{{ template_data.filters.graduation_year }}">
+        </div>
+        <div>
+          <label class="label-caps">Projects</label>
+          <input class="field" name="projects" value="{{ template_data.filters.projects }}" placeholder="Keyword">
+        </div>
+      </div>
+      <div class="mt-4 flex flex-wrap gap-2">
+        <button class="btn-solid" type="submit">Search</button>
+        <a class="btn-ghost" href="{% url 'jobs.candidates' %}">Clear</a>
+      </div>
+    </form>
+
+    <div class="space-y-3">
+      {% for candidate in template_data.candidates %}
+      <article class="card-interactive">
+        <h3 class="text-lg font-semibold tracking-tight">
+          <a href="{% url 'jobs.candidate_detail' candidate.pk %}" class="text-navy hover:text-blue">{{ candidate.display_name }}</a>
+        </h3>
+        <p class="mt-1 text-sm text-muted-foreground">
+          {{ candidate.headline|default:"No headline" }}
+          {% if candidate.location %} · {{ candidate.location }}{% endif %}
+        </p>
+        <div class="mt-3 flex flex-wrap gap-1.5">
+          {% for skill in candidate.skills.all %}<span class="chip-accent">{{ skill.name }}</span>{% endfor %}
+        </div>
+      </article>
+      {% empty %}
+      <div class="empty">
+        <h3>No candidates found</h3>
+        <p>Try broadening your filters.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

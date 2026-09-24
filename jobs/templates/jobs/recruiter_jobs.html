@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <div class="page-header flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="page-title">My jobs</h1>
+        <p class="page-desc">Post and manage openings.</p>
+      </div>
+      <a class="btn-solid" href="{% url 'jobs.recruiter_job_create' %}">Post a job</a>
+    </div>
+
+    <div class="overflow-hidden rounded-lg border border-border bg-white">
+      <div class="overflow-x-auto">
+        <table class="table-seekr">
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Applicants</th>
+              <th>Updated</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for job in template_data.jobs %}
+            <tr>
+              <td>
+                <div class="font-semibold text-navy">{{ job.title }}</div>
+                <div class="text-sm text-muted-foreground">{{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}</div>
+              </td>
+              <td><span class="status status-{{ job.status|lower }}">{{ job.get_status_display }}</span></td>
+              <td>{{ job.app_count }}</td>
+              <td class="text-muted-foreground">{{ job.updated_at|date:"M j, Y" }}</td>
+              <td class="whitespace-nowrap text-sm">
+                <a href="{% url 'jobs.applicants' job.pk %}">Applicants</a>
+                <span class="text-muted-foreground">·</span>
+                <a href="{% url 'jobs.recruiter_job_edit' job.pk %}">Edit</a>
+                <span class="text-muted-foreground">·</span>
+                <a href="{% url 'jobs.recruiter_job_delete' job.pk %}">Delete</a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5">
+                <div class="empty border-0">
+                  <h3>No jobs yet</h3>
+                  <p class="mb-4">Create your first opening to start receiving applications.</p>
+                  <a class="btn-solid" href="{% url 'jobs.recruiter_job_create' %}">Post a job</a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6">
+    <div class="page-header">
+      <h1 class="page-title">Roles</h1>
+      <p class="page-desc">What each role can do on Seekr.</p>
+    </div>
+    <div class="space-y-3">
+      {% for role in template_data.roles %}
+      <div class="card">
+        <h2 class="text-lg font-semibold text-navy">{{ role.name }}</h2>
+        <p class="mt-2 text-muted-foreground">{{ role.description }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

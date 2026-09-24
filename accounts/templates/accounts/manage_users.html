@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6">
+    <div class="page-header">
+      <h1 class="page-title">Users</h1>
+      <p class="page-desc">Manage accounts, roles, and access.</p>
+    </div>
+    <div class="overflow-hidden rounded-lg border border-border bg-white">
+      <div class="overflow-x-auto">
+        <table class="table-seekr">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Joined</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in template_data.users %}
+            <tr>
+              <td>
+                <div class="font-semibold text-navy">{{ u.get_full_name|default:u.username }}</div>
+                <div class="text-sm text-muted-foreground">{{ u.email|default:u.username }}</div>
+              </td>
+              <td>{{ u.profile.get_role_display }}</td>
+              <td>
+                <span class="status {% if u.profile.status == 'SUSPENDED' %}status-suspended{% else %}status-active{% endif %}">
+                  {{ u.profile.get_status_display }}
+                </span>
+              </td>
+              <td class="text-muted-foreground">{{ u.date_joined|date:"M j, Y" }}</td>
+              <td><a href="{% url 'accounts.manage_user_detail' u.id %}">Manage</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="py-8 text-center text-muted-foreground">No users yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}

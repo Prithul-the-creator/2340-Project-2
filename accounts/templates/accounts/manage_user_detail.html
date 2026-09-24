@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-xl px-4 sm:px-6">
+    <div class="page-header">
+      <h1 class="page-title">{{ template_data.target.get_full_name|default:template_data.target.username }}</h1>
+      <p class="page-desc">Update role or account status.</p>
+    </div>
+    <div class="card">
+      <p class="mb-4 text-sm text-muted-foreground">Username: {{ template_data.target.username }} · Joined {{ template_data.target.date_joined|date:"M j, Y" }}</p>
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="label" for="{{ template_data.form.role.id_for_label }}">Role</label>
+          {{ template_data.form.role }}
+        </div>
+        <div>
+          <label class="label" for="{{ template_data.form.status.id_for_label }}">Status</label>
+          {{ template_data.form.status }}
+        </div>
+        <p class="text-sm text-muted-foreground">Suspending an account prevents login. Changing roles updates what the user can access.</p>
+        <div class="flex flex-wrap gap-2">
+          <button type="submit" class="btn-solid" onclick="return confirm('Apply these changes?');">Save changes</button>
+          <a class="btn-ghost" href="{% url 'accounts.manage_users' %}">Back</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock content %}

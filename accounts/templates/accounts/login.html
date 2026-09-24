@@ -1,40 +1,31 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="p-3 mt-4">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card shadow p-3 mb-4 rounded">
-          <div class="card-body">
-            <h2>Login</h2>
-            <hr />
-            {% if template_data.error %}
-            <div class="alert alert-danger" role="alert">
-              {{ template_data.error }}
-            </div>
-            {% endif %}
-            <form method="POST">
-              {% csrf_token %}
-              <p>
-                <label for="username">Username</label>
-                <input id="username" type="text" name="username" required
-                  autocomplete="username" class="form-control">
-              </p>
-              <p>
-                <label for="password">Password</label>
-                <input id="password" type="password" name="password" required
-                  autocomplete="current-password" class="form-control">
-              </p>
-              <div class="text-center">
-                <button type="submit" class="btn bg-dark text-white">
-                  Login
-                </button>
-              </div>
-            </form>
-          </div>
+<div class="flex min-h-[calc(100vh-8rem)] items-center py-10">
+  <div class="mx-auto w-full max-w-md px-4">
+    <div class="mb-6 text-center">
+      <a href="{% url 'home.index' %}" class="logo-mark mb-6 inline-flex justify-center"><span>S</span>Seekr</a>
+      <h1 class="mt-4 text-3xl font-bold tracking-tight text-navy">Sign in</h1>
+      <p class="mt-2 text-muted-foreground">Welcome back to Seekr.</p>
+    </div>
+    <div class="card rounded-xl p-8 shadow-sm">
+      {% if template_data.error %}
+      <div class="alert alert-danger mb-4" role="alert">{{ template_data.error }}</div>
+      {% endif %}
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        <div>
+          <label class="label" for="username">Username</label>
+          <input id="username" type="text" name="username" required autocomplete="username" class="field">
         </div>
-      </div>
+        <div>
+          <label class="label" for="password">Password</label>
+          <input id="password" type="password" name="password" required autocomplete="current-password" class="field">
+        </div>
+        <button type="submit" class="btn-solid w-full">Sign in</button>
+      </form>
+      <p class="mt-4 text-center text-sm text-muted-foreground">No account? <a href="{% url 'accounts.signup' %}">Get started</a></p>
     </div>
   </div>
 </div>
 {% endblock content %}
+{% block footer %}{% endblock %}

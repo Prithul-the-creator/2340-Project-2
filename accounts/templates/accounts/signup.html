@@ -1,24 +1,42 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="p-3 mt-4">
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-md-8">
-        <div class="card shadow p-3 mb-4 rounded">
-          <div class="card-body">
-            <h2>Sign Up</h2>
-            <hr />
-            <form method="POST">
-              {% csrf_token %}
-              {{ template_data.form.as_p }}
-              <button type="submit" class="btn bg-dark text-white">
-                Sign Up
-              </button>
-            </form>
+<div class="flex min-h-[calc(100vh-8rem)] items-center py-10">
+  <div class="mx-auto w-full max-w-md px-4">
+    <div class="mb-6 text-center">
+      <a href="{% url 'home.index' %}" class="logo-mark mb-6 inline-flex justify-center"><span>S</span>Seekr</a>
+      <h1 class="mt-4 text-3xl font-bold tracking-tight text-navy">Get started</h1>
+      <p class="mt-2 text-muted-foreground">Create your Seekr account.</p>
+    </div>
+    <div class="card rounded-xl p-8 shadow-sm">
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        {{ template_data.form.non_field_errors }}
+        {% for field in template_data.form %}
+          <div>
+            {% if field.name == 'role' %}
+              <label class="label">{{ field.label }}</label>
+              <div class="space-y-2">
+                {% for radio in field %}
+                  <label class="flex items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-sm hover:bg-slate-50">
+                    {{ radio.tag }}
+                    <span>{{ radio.choice_label }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+            {% else %}
+              <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            {% endif %}
+            {% if field.errors %}
+              <p class="mt-1 text-sm text-failed">{{ field.errors|striptags }}</p>
+            {% endif %}
           </div>
-        </div>
-      </div>
+        {% endfor %}
+        <button type="submit" class="btn-solid w-full">Create account</button>
+      </form>
+      <p class="mt-4 text-center text-sm text-muted-foreground">Already have an account? <a href="{% url 'accounts.login' %}">Sign in</a></p>
     </div>
   </div>
 </div>
 {% endblock content %}
+{% block footer %}{% endblock %}

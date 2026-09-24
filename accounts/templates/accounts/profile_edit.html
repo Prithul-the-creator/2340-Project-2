@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6">
+    <div class="page-header">
+      <h1 class="page-title">Edit profile</h1>
+      <p class="page-desc">Help recruiters understand who you are.</p>
+    </div>
+
+    <div class="card mb-4">
+      <h2 class="mb-4 text-lg font-semibold text-navy">Basics</h2>
+      <form method="POST" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        {% for field in template_data.form %}
+          <div>
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="mt-1 text-xs text-muted-foreground">{{ field.help_text }}</p>{% endif %}
+            {% if field.errors %}<p class="mt-1 text-sm text-failed">{{ field.errors|striptags }}</p>{% endif %}
+          </div>
+        {% endfor %}
+        <div class="flex flex-wrap gap-2">
+          <button type="submit" class="btn-solid">Save profile</button>
+          <a class="btn-ghost" href="{% url 'accounts.profile' %}">Cancel</a>
+        </div>
+      </form>
+    </div>
+
+    <div class="card mb-4">
+      <h2 class="mb-4 text-lg font-semibold text-navy">Education</h2>
+      {% for edu in template_data.profile.educations.all %}
+        <div class="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <div class="font-semibold text-navy">{{ edu.school }}</div>
+            <div class="text-sm text-muted-foreground">{{ edu.degree }} {% if edu.graduation_year %}· {{ edu.graduation_year }}{% endif %}</div>
+          </div>
+          <form method="POST" action="{% url 'accounts.education_delete' edu.pk %}">
+            {% csrf_token %}
+            <button class="btn-ghost" type="submit">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+      <hr class="my-4 border-border">
+      <form method="POST" action="{% url 'accounts.education_add' %}" class="space-y-3">
+        {% csrf_token %}
+        {% for field in template_data.education_form %}
+          <div>
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+          </div>
+        {% endfor %}
+        <button class="btn-outline" type="submit">Add education</button>
+      </form>
+    </div>
+
+    <div class="card mb-4">
+      <h2 class="mb-4 text-lg font-semibold text-navy">Experience</h2>
+      {% for exp in template_data.profile.experiences.all %}
+        <div class="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <div class="font-semibold text-navy">{{ exp.title }}</div>
+            <div class="text-sm text-muted-foreground">{{ exp.company }}</div>
+          </div>
+          <form method="POST" action="{% url 'accounts.experience_delete' exp.pk %}">
+            {% csrf_token %}
+            <button class="btn-ghost" type="submit">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+      <hr class="my-4 border-border">
+      <form method="POST" action="{% url 'accounts.experience_add' %}" class="space-y-3">
+        {% csrf_token %}
+        {% for field in template_data.experience_form %}
+          <div>
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+          </div>
+        {% endfor %}
+        <button class="btn-outline" type="submit">Add experience</button>
+      </form>
+    </div>
+
+    <div class="card mb-4">
+      <h2 class="mb-4 text-lg font-semibold text-navy">Projects</h2>
+      {% for project in template_data.profile.projects.all %}
+        <div class="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <div class="font-semibold text-navy">{{ project.name }}</div>
+            <div class="text-sm text-muted-foreground">{{ project.description|truncatewords:20 }}</div>
+          </div>
+          <form method="POST" action="{% url 'accounts.project_delete' project.pk %}">
+            {% csrf_token %}
+            <button class="btn-ghost" type="submit">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+      <hr class="my-4 border-border">
+      <form method="POST" action="{% url 'accounts.project_add' %}" class="space-y-3">
+        {% csrf_token %}
+        {% for field in template_data.project_form %}
+          <div>
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="mt-1 text-xs text-muted-foreground">{{ field.help_text }}</p>{% endif %}
+          </div>
+        {% endfor %}
+        <button class="btn-outline" type="submit">Add project</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2 class="mb-4 text-lg font-semibold text-navy">Links</h2>
+      {% for link in template_data.profile.links.all %}
+        <div class="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <div class="font-semibold text-navy">{{ link.get_link_type_display }}</div>
+            <div class="text-sm text-muted-foreground">{{ link.url }}</div>
+          </div>
+          <form method="POST" action="{% url 'accounts.link_delete' link.pk %}">
+            {% csrf_token %}
+            <button class="btn-ghost" type="submit">Remove</button>
+          </form>
+        </div>
+      {% endfor %}
+      <hr class="my-4 border-border">
+      <form method="POST" action="{% url 'accounts.link_add' %}" class="space-y-3">
+        {% csrf_token %}
+        {% for field in template_data.link_form %}
+          <div>
+            <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+          </div>
+        {% endfor %}
+        <button class="btn-outline" type="submit">Add link</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-3xl px-4 sm:px-6">
+    <div class="page-header flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="page-title">{{ template_data.profile.display_name }}</h1>
+        <p class="page-desc">{{ template_data.profile.headline|default:"Add a headline so recruiters know what you do." }}</p>
+      </div>
+      {% if template_data.is_owner %}
+        <a class="btn-outline" href="{% url 'accounts.profile_edit' %}">Edit profile</a>
+      {% endif %}
+    </div>
+
+    <div class="card mb-4">
+      <p class="text-sm text-muted-foreground">
+        {% if template_data.profile.location %}{{ template_data.profile.location }} · {% endif %}
+        {{ template_data.profile.get_privacy_display }}
+      </p>
+      {% if template_data.profile.bio %}
+        <p class="mt-3 text-muted-foreground">{{ template_data.profile.bio }}</p>
+      {% else %}
+        <p class="mt-3 text-sm text-muted-foreground">No bio yet.</p>
+      {% endif %}
+      {% if template_data.profile.skills.all %}
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          {% for skill in template_data.profile.skills.all %}<span class="chip-accent">{{ skill.name }}</span>{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+
+    <h2 class="section-label">Education</h2>
+    <div class="card">
+      {% for edu in template_data.profile.educations.all %}
+        <div class="{% if not forloop.last %}mb-3 border-b border-border pb-3{% endif %}">
+          <div class="font-semibold text-navy">{{ edu.school }}</div>
+          <div class="text-sm text-muted-foreground">{{ edu.degree }}{% if edu.field %} · {{ edu.field }}{% endif %}{% if edu.graduation_year %} · {{ edu.graduation_year }}{% endif %}</div>
+        </div>
+      {% empty %}
+        <p class="text-sm text-muted-foreground">No education added.</p>
+      {% endfor %}
+    </div>
+
+    <h2 class="section-label">Experience</h2>
+    <div class="card">
+      {% for exp in template_data.profile.experiences.all %}
+        <div class="{% if not forloop.last %}mb-3 border-b border-border pb-3{% endif %}">
+          <div class="font-semibold text-navy">{{ exp.title }}</div>
+          <div class="text-sm text-muted-foreground">{{ exp.company }}{% if exp.location %} · {{ exp.location }}{% endif %}</div>
+          {% if exp.description %}<p class="mt-2 text-sm text-muted-foreground">{{ exp.description }}</p>{% endif %}
+        </div>
+      {% empty %}
+        <p class="text-sm text-muted-foreground">No experience added.</p>
+      {% endfor %}
+    </div>
+
+    <h2 class="section-label">Projects</h2>
+    <div class="card">
+      {% for project in template_data.profile.projects.all %}
+        <div class="{% if not forloop.last %}mb-3 border-b border-border pb-3{% endif %}">
+          <div class="font-semibold text-navy">
+            {% if project.url %}<a href="{{ project.url }}" target="_blank" rel="noopener">{{ project.name }}</a>{% else %}{{ project.name }}{% endif %}
+          </div>
+          {% if project.description %}<p class="mt-1 text-sm text-muted-foreground">{{ project.description }}</p>{% endif %}
+          <div class="mt-2 flex flex-wrap gap-1.5">
+            {% for skill in project.skills.all %}<span class="chip">{{ skill.name }}</span>{% endfor %}
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-sm text-muted-foreground">No projects added.</p>
+      {% endfor %}
+    </div>
+
+    <h2 class="section-label">Links</h2>
+    <div class="card">
+      {% for link in template_data.profile.links.all %}
+        <div class="mb-1 text-sm">
+          <span class="text-muted-foreground">{{ link.get_link_type_display }}:</span>
+          <a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label|default:link.url }}</a>
+        </div>
+      {% empty %}
+        <p class="text-sm text-muted-foreground">No links added.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

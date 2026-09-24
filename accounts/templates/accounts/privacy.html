@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page">
+  <div class="mx-auto max-w-xl px-4 sm:px-6">
+    <div class="page-header">
+      <h1 class="page-title">Privacy</h1>
+      <p class="page-desc">Control what recruiters can see.</p>
+    </div>
+    <div class="card">
+      <form method="POST" class="space-y-4">
+        {% csrf_token %}
+        {% for radio in template_data.form.privacy %}
+          <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 hover:bg-slate-50">
+            {{ radio.tag }}
+            <span>
+              <span class="block font-semibold text-navy">{{ radio.choice_label }}</span>
+            </span>
+          </label>
+        {% endfor %}
+        <ul class="space-y-2 text-sm text-muted-foreground">
+          <li><strong class="text-navy">Public to recruiters</strong> — {{ template_data.privacy_help.PUBLIC_RECRUITERS }}</li>
+          <li><strong class="text-navy">Applications only</strong> — {{ template_data.privacy_help.APPLICATIONS_ONLY }}</li>
+          <li><strong class="text-navy">Private</strong> — {{ template_data.privacy_help.PRIVATE }}</li>
+        </ul>
+        <button type="submit" class="btn-solid">Save privacy settings</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock content %}

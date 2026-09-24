@@ -1,3 +1,1 @@
-from django.test import TestCase
-
-# Create your tests here.
+# Job app tests live in accounts.tests for shared fixtures.

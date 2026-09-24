@@ -1,15 +1,31 @@
 {% extends 'base.html' %}
 {% block content %}
-{% load static %}
-<div class="p-3">
-  <div class="container">
-    <div class="row mt-3">
-      <div class="col-md-6 mx-auto mb-3">
-        <h2>About</h2>
-        <hr />
-        <p>Project 2 filler words flkasjfalksdfjalksdfjsalkdfjasldkfjasldkfjasflkasjflkasf.</p>
-        <p>CS2340 Project 2 silakdfaslkdfjaslkdfjaslkfjaslkdfjslkf.</p>
-      </div>
+<div class="page">
+  <div class="container-seekr max-w-3xl">
+    <div class="page-header">
+      <h1 class="page-title">About Seekr</h1>
+      <p class="page-desc">A calm platform connecting early-career talent with recruiters — professional without the corporate noise.</p>
+    </div>
+    <div class="card mb-4">
+      <h2 class="text-lg font-semibold text-navy">What we believe</h2>
+      <p class="mt-3 text-muted-foreground">Job searching should feel human. Seekr borrows the calm, evidence-first visual language of modern institutional software — white surfaces, restrained blue, and clear hierarchy.</p>
+    </div>
+    <div class="grid gap-4 md:grid-cols-3">
+      <article class="card">
+        <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-blue/10 text-blue"><i class="fa-solid fa-graduation-cap"></i></div>
+        <h3 class="font-semibold text-navy">Job seekers</h3>
+        <p class="mt-2 text-sm text-muted-foreground">Build a profile, search with real filters, apply with a note, and track Applied → Offer.</p>
+      </article>
+      <article class="card">
+        <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-blue/10 text-blue"><i class="fa-solid fa-briefcase"></i></div>
+        <h3 class="font-semibold text-navy">Recruiters</h3>
+        <p class="mt-2 text-sm text-muted-foreground">Post roles, review applicants, save searches, and get recommendations with reasons.</p>
+      </article>
+      <article class="card">
+        <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-blue/10 text-blue"><i class="fa-solid fa-shield"></i></div>
+        <h3 class="font-semibold text-navy">Administrators</h3>
+        <p class="mt-2 text-sm text-muted-foreground">Manage users and roles so the platform stays fair and safe.</p>
+      </article>
     </div>
   </div>
 </div>

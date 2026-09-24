@@ -42,3 +42,9 @@ def signup(request):
         else:
             template_data['form'] = form
             return render(request, 'accounts/signup.html', {'template_data': template_data})
+
+
+@login_required
+def profile(request):
+    template_data = {'title': 'Profile'}
+    return render(request, 'accounts/profile.html', {'template_data': template_data})

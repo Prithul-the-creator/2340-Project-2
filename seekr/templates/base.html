@@ -24,6 +24,7 @@
         <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
           <div class="navbar-nav ms-auto navbar-ml">
             <a class="nav-link" href="{% url 'home.about' %}">About</a>
+            <a class="nav-link" href="{% url 'jobs.index' %}">Jobs</a>
             <div class="vr bg-white mx-2 d-none d-lg-block"></div>
             {% if user.is_authenticated %}
             <a class="nav-link" href="{% url 'accounts.profile' %}">Profile</a>
@@ -54,6 +55,7 @@
             <b>LINKS</b>
             <hr />
             <p><a class="nav-link" href="{% url 'home.about' %}">About</a></p>
+            <p><a class="nav-link" href="{% url 'jobs.index' %}">Jobs</a></p>
           </div>
           <div class="col-md-3 col-lg-3 col-xl-3 mx-auto mb-4">
             <b>CONTACT</b>

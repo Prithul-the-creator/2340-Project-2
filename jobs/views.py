@@ -312,6 +312,10 @@ def recruiter_applicants(request, pk):
         'job': job,
         'applications': applications,
         'selected': selected,
+        'selected_visible': (
+            selected is not None
+            and selected.seeker.profile.is_visible_to_recruiter(request.user)
+        ),
         'status_form': status_form,
         'recommendations': recommendations,
         'dismissed_count': job.dismissed_recommendations.count(),

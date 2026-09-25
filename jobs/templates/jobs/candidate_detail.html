@@ -51,6 +51,24 @@
       {% empty %}<p class="text-sm text-muted-foreground">No projects listed.</p>{% endfor %}
     </div>
 
+    <h2 class="section-label">Links</h2>
+    <div class="card mb-2">
+      {% if template_data.profile.resume %}
+        <div class="mb-1 text-sm">
+          <span class="text-muted-foreground">Résumé:</span>
+          <a href="{{ template_data.profile.resume.url }}" target="_blank" rel="noopener">Download</a>
+        </div>
+      {% endif %}
+      {% for link in template_data.profile.links.all %}
+        <div class="mb-1 text-sm">
+          <span class="text-muted-foreground">{{ link.get_link_type_display }}:</span>
+          <a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label|default:link.url }}</a>
+        </div>
+      {% empty %}
+        {% if not template_data.profile.resume %}<p class="text-sm text-muted-foreground">No links added.</p>{% endif %}
+      {% endfor %}
+    </div>
+
     {% if template_data.applications %}
     <h2 class="section-label">Applications to your jobs</h2>
     <div class="card">

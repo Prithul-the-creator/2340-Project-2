@@ -5,7 +5,17 @@ from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from accounts.models import AccountStatus, Privacy, Profile, Project, Role, Skill
+from accounts.models import (
+    AccountStatus,
+    Education,
+    Experience,
+    Link,
+    Privacy,
+    Profile,
+    Project,
+    Role,
+    Skill,
+)
 from jobs.models import (
     Application,
     ApplicationStatus,
@@ -348,3 +358,51 @@ class SeekrCoreTests(TestCase):
         self.assertEqual(
             recommend_candidates_for_job(self.job)[0]['profile'], self.seeker_profile
         )
+
+    def _apply_with_full_profile(self):
+        Education.objects.create(profile=self.seeker_profile, school='Georgia Tech')
+        Experience.objects.create(
+            profile=self.seeker_profile, title='SWE Intern', company='Initech'
+        )
+        Project.objects.create(profile=self.seeker_profile, name='Course Planner')
+        Link.objects.create(
+            profile=self.seeker_profile, link_type='GITHUB', url='https://github.com/seeker1'
+        )
+        return Application.objects.create(
+            seeker=self.seeker, job=self.job, note='Built APIs at Initech'
+        )
+
+    def test_applicant_panel_shows_profile_and_application(self):
+        app = self._apply_with_full_profile()
+        self.client.login(username='recruiter1', password='testpass123')
+        response = self.client.get(
+            reverse('jobs.applicants', args=[self.job.pk]), {'app': app.pk}
+        )
+        for text in [
+            'Built APIs at Initech',
+            'Georgia Tech',
+            'SWE Intern',
+            'Course Planner',
+            'https://github.com/seeker1',
+        ]:
+            self.assertContains(response, text)
+
+    def test_applicant_panel_respects_private_profile(self):
+        app = self._apply_with_full_profile()
+        self.seeker_profile.privacy = Privacy.PRIVATE
+        self.seeker_profile.save()
+        self.client.login(username='recruiter1', password='testpass123')
+        response = self.client.get(
+            reverse('jobs.applicants', args=[self.job.pk]), {'app': app.pk}
+        )
+        self.assertContains(response, 'Built APIs at Initech')
+        self.assertContains(response, 'profile is private')
+        self.assertNotContains(response, 'Georgia Tech')
+
+    def test_candidate_detail_shows_links(self):
+        self._apply_with_full_profile()
+        self.client.login(username='recruiter1', password='testpass123')
+        response = self.client.get(
+            reverse('jobs.candidate_detail', args=[self.seeker_profile.pk])
+        )
+        self.assertContains(response, 'https://github.com/seeker1')

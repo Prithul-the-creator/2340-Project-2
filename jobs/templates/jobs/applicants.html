@@ -27,30 +27,68 @@
       <div class="space-y-4">
         {% if template_data.selected %}
         <div class="card">
+          {% with profile=template_data.selected.seeker.profile %}
           <h2 class="text-xl font-semibold tracking-tight text-navy">{{ template_data.selected.seeker.get_full_name|default:template_data.selected.seeker.username }}</h2>
-          <p class="mt-1 text-muted-foreground">{{ template_data.selected.seeker.profile.headline }}</p>
-          {% if template_data.selected.seeker.profile.location %}
-            <p class="text-sm text-muted-foreground">{{ template_data.selected.seeker.profile.location }}</p>
-          {% endif %}
-          <div class="mt-3 flex flex-wrap gap-1.5">
-            {% for skill in template_data.selected.seeker.profile.skills.all %}
-              <span class="chip-accent">{{ skill.name }}</span>
-            {% endfor %}
-          </div>
-          {% if template_data.selected.note %}
-            <h3 class="mt-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Application note</h3>
-            <p class="mt-2 text-muted-foreground">{{ template_data.selected.note }}</p>
-          {% endif %}
-          {% if template_data.selected.seeker.profile.bio %}
-            <h3 class="mt-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">About</h3>
-            <p class="mt-2 text-muted-foreground">{{ template_data.selected.seeker.profile.bio }}</p>
-          {% endif %}
-          <div class="mt-4 flex flex-wrap gap-3 text-sm">
-            <a href="{% url 'jobs.candidate_detail' template_data.selected.seeker.profile.pk %}">Full profile</a>
-            {% if template_data.selected.seeker.email %}
-              <a href="mailto:{{ template_data.selected.seeker.email }}">Contact</a>
+          <p class="mt-1 text-sm text-muted-foreground">Applied {{ template_data.selected.created_at|date:"M j, Y" }} · <span class="status status-{{ template_data.selected.status|lower }}">{{ template_data.selected.get_status_display }}</span></p>
+
+          <h3 class="mt-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Application note</h3>
+          <p class="mt-2 text-muted-foreground">{{ template_data.selected.note|default:"No note included." }}</p>
+
+          {% if template_data.selected_visible %}
+            <p class="mt-5 text-muted-foreground">{{ profile.headline }}</p>
+            {% if profile.location %}
+              <p class="text-sm text-muted-foreground">{{ profile.location }}</p>
             {% endif %}
-          </div>
+            <div class="mt-3 flex flex-wrap gap-1.5">
+              {% for skill in profile.skills.all %}
+                <span class="chip-accent">{{ skill.name }}</span>
+              {% endfor %}
+            </div>
+            {% if profile.bio %}
+              <h3 class="mt-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">About</h3>
+              <p class="mt-2 text-muted-foreground">{{ profile.bio }}</p>
+            {% endif %}
+
+            <h3 class="mt-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Education</h3>
+            {% for edu in profile.educations.all %}
+              <p class="mt-2 text-sm"><span class="font-semibold text-navy">{{ edu.school }}</span> <span class="text-muted-foreground">{{ edu.degree }}{% if edu.field %} · {{ edu.field }}{% endif %}{% if edu.graduation_year %} · {{ edu.graduation_year }}{% endif %}</span></p>
+            {% empty %}
+              <p class="mt-2 text-sm text-muted-foreground">No education listed.</p>
+            {% endfor %}
+
+            <h3 class="mt-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Experience</h3>
+            {% for exp in profile.experiences.all %}
+              <p class="mt-2 text-sm"><span class="font-semibold text-navy">{{ exp.title }}</span> <span class="text-muted-foreground">{{ exp.company }}</span></p>
+            {% empty %}
+              <p class="mt-2 text-sm text-muted-foreground">No experience listed.</p>
+            {% endfor %}
+
+            <h3 class="mt-5 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Projects</h3>
+            {% for project in profile.projects.all %}
+              <p class="mt-2 text-sm">
+                <span class="font-semibold text-navy">{% if project.url %}<a href="{{ project.url }}" target="_blank" rel="noopener">{{ project.name }}</a>{% else %}{{ project.name }}{% endif %}</span>
+                {% if project.description %}<span class="text-muted-foreground">{{ project.description }}</span>{% endif %}
+              </p>
+            {% empty %}
+              <p class="mt-2 text-sm text-muted-foreground">No projects listed.</p>
+            {% endfor %}
+
+            <div class="mt-5 flex flex-wrap gap-3 text-sm">
+              {% if profile.resume %}
+                <a href="{{ profile.resume.url }}" target="_blank" rel="noopener">Résumé</a>
+              {% endif %}
+              {% for link in profile.links.all %}
+                <a href="{{ link.url }}" target="_blank" rel="noopener">{{ link.label|default:link.get_link_type_display }}</a>
+              {% endfor %}
+              <a href="{% url 'jobs.candidate_detail' profile.pk %}">Full profile</a>
+              {% if template_data.selected.seeker.email %}
+                <a href="mailto:{{ template_data.selected.seeker.email }}">Contact</a>
+              {% endif %}
+            </div>
+          {% else %}
+            <div class="alert alert-info mt-5">This candidate’s profile is private. Only their application is shared with you.</div>
+          {% endif %}
+          {% endwith %}
           <hr class="my-5 border-border">
           <form method="POST" class="space-y-3">
             {% csrf_token %}

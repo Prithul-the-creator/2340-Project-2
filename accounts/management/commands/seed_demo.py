@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 
 from accounts.models import Education, Privacy, Profile, Project, Role, Skill
-from jobs.models import Job, JobStatus, WorkModel
+from jobs.models import Job, JobStatus, SavedSearch, WorkModel
 
 
 class Command(BaseCommand):
@@ -91,6 +91,15 @@ class Command(BaseCommand):
                 status=JobStatus.ACTIVE,
             )
             job.skills.add(python, react)
+
+        SavedSearch.objects.get_or_create(
+            recruiter=recruiter,
+            name='Python in Atlanta',
+            defaults={
+                'filters': {'skills': 'Python', 'location': 'Atlanta'},
+                'seen_profile_ids': [profile.pk],
+            },
+        )
 
         self.stdout.write(self.style.SUCCESS(
             'Demo users ready:\n'

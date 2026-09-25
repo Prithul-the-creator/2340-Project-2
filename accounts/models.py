@@ -31,6 +31,19 @@ class Skill(models.Model):
         return self.name
 
 
+def skills_from_text(raw):
+    # Reuse an existing skill whatever its capitalization so "python" and
+    # "Python" stay one skill for search, filters, and recommendations.
+    skills = []
+    for name in [n.strip() for n in (raw or '').split(',') if n.strip()]:
+        skill = Skill.objects.filter(name__iexact=name).first()
+        if skill is None:
+            skill = Skill.objects.create(name=name)
+        if skill not in skills:
+            skills.append(skill)
+    return skills
+
+
 class Profile(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,

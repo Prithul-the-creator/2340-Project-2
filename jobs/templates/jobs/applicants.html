@@ -68,6 +68,9 @@
 
         <div class="card">
           <h2 class="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Recommended candidates</h2>
+          {% if template_data.recommendations and template_data.job.status != 'ACTIVE' %}
+            <p class="mt-2 text-sm text-muted-foreground">Set this job to Active to invite candidates.</p>
+          {% endif %}
           {% for item in template_data.recommendations %}
             <div class="border-t border-border py-3.5 first:border-t-0 first:pt-3">
               <a href="{% url 'jobs.candidate_detail' item.profile.pk %}" class="font-semibold text-navy hover:text-blue">{{ item.profile.display_name }}</a>
@@ -75,10 +78,33 @@
               {% for reason in item.reasons %}
                 <div class="mt-1 border-l-2 border-blue/20 pl-2.5 text-sm text-muted-foreground">{{ reason }}</div>
               {% endfor %}
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                {% if template_data.job.status == 'ACTIVE' %}
+                  {% if item.invited %}
+                    <span class="chip">Invited</span>
+                  {% else %}
+                    <form method="POST" action="{% url 'jobs.invite_candidate' template_data.job.pk item.profile.pk %}">
+                      {% csrf_token %}
+                      <button class="btn-ghost" type="submit">Invite to apply</button>
+                    </form>
+                  {% endif %}
+                {% endif %}
+                <form method="POST" action="{% url 'jobs.dismiss_recommendation' template_data.job.pk item.profile.pk %}">
+                  {% csrf_token %}
+                  <button class="btn-ghost" type="submit">Not a fit</button>
+                </form>
+              </div>
             </div>
           {% empty %}
             <p class="mt-3 text-sm text-muted-foreground">No strong matches yet. Add required skills to the job to improve recommendations.</p>
           {% endfor %}
+          {% if template_data.dismissed_count %}
+            <form method="POST" action="{% url 'jobs.restore_recommendations' template_data.job.pk %}" class="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-2 text-sm text-muted-foreground">
+              {% csrf_token %}
+              <span>{{ template_data.dismissed_count }} dismissed</span>
+              <button class="btn-ghost" type="submit">Restore</button>
+            </form>
+          {% endif %}
         </div>
       </div>
     </div>

@@ -25,6 +25,7 @@ from .models import (
     Profile,
     Project,
     Role,
+    skills_from_text,
 )
 from jobs.services import check_saved_searches_for_profile
 
@@ -120,6 +121,8 @@ def education_add(request):
             edu = form.save(commit=False)
             edu.profile = profile
             edu.save()
+            if profile.role == Role.SEEKER:
+                check_saved_searches_for_profile(profile)
             messages.success(request, 'Education added.')
     return redirect('accounts.profile_edit')
 
@@ -166,15 +169,7 @@ def project_add(request):
             project = form.save(commit=False)
             project.profile = profile
             project.save()
-            raw = form.cleaned_data.get('skills_text', '')
-            names = [n.strip() for n in raw.split(',') if n.strip()]
-            from .models import Skill
-
-            skills = []
-            for name in names:
-                skill, _ = Skill.objects.get_or_create(name=name)
-                skills.append(skill)
-            project.skills.set(skills)
+            project.skills.set(skills_from_text(form.cleaned_data.get('skills_text')))
             if profile.role == Role.SEEKER:
                 check_saved_searches_for_profile(profile)
             messages.success(request, 'Project added.')
@@ -221,6 +216,8 @@ def privacy_settings(request):
         form = PrivacyForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
+            if profile.role == Role.SEEKER:
+                check_saved_searches_for_profile(profile)
             messages.success(request, 'Privacy settings updated.')
             return redirect('accounts.privacy')
     else:

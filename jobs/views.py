@@ -2,16 +2,28 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import urlencode
 
 from accounts.decorators import get_profile, require_role
 from accounts.models import Profile, Role
 
 from .forms import ApplicationForm, ApplicationStatusForm, JobForm, SavedSearchForm
-from .models import Application, Job, JobStatus, Notification, SavedSearch
+from .models import (
+    Application,
+    DismissedRecommendation,
+    Job,
+    JobStatus,
+    Notification,
+    SavedSearch,
+)
 from .services import (
+    describe_filters,
     filter_candidates,
     filters_from_request,
+    matching_profile_ids,
+    rank_candidates,
     recommend_candidates_for_job,
     visible_seeker_queryset,
 )
@@ -287,6 +299,13 @@ def recruiter_applicants(request, pk):
             status_form = ApplicationStatusForm(instance=selected)
 
     recommendations = recommend_candidates_for_job(job)
+    invited_ids = set(
+        Notification.objects.filter(
+            notification_type='invite', link=f'/jobs/{job.pk}/'
+        ).values_list('user_id', flat=True)
+    )
+    for item in recommendations:
+        item['invited'] = item['profile'].user_id in invited_ids
 
     template_data = {
         'title': f'Applicants · {job.title}',
@@ -295,10 +314,64 @@ def recruiter_applicants(request, pk):
         'selected': selected,
         'status_form': status_form,
         'recommendations': recommendations,
+        'dismissed_count': job.dismissed_recommendations.count(),
     }
     return render(
         request, 'jobs/applicants.html', {'template_data': template_data}
     )
+
+
+@require_role(Role.RECRUITER)
+def invite_candidate(request, pk, profile_pk):
+    job = get_object_or_404(Job, pk=pk, owner=request.user)
+    if request.method != 'POST':
+        return redirect('jobs.applicants', pk=job.pk)
+    if job.status != JobStatus.ACTIVE:
+        messages.error(request, 'Publish this job before inviting candidates.')
+        return redirect('jobs.applicants', pk=job.pk)
+
+    profile = get_object_or_404(
+        visible_seeker_queryset(request.user), pk=profile_pk
+    )
+    link = f'/jobs/{job.pk}/'
+    if Application.objects.filter(seeker=profile.user, job=job).exists():
+        messages.info(request, f'{profile.display_name} already applied.')
+    elif Notification.objects.filter(
+        user=profile.user, notification_type='invite', link=link
+    ).exists():
+        messages.info(request, f'{profile.display_name} was already invited.')
+    else:
+        recruiter_name = request.user.get_full_name() or request.user.username
+        Notification.objects.create(
+            user=profile.user,
+            notification_type='invite',
+            message=f'{recruiter_name} at {job.company} invited you to apply to {job.title}',
+            link=link,
+        )
+        messages.success(request, f'Invited {profile.display_name} to apply.')
+    return redirect('jobs.applicants', pk=job.pk)
+
+
+@require_role(Role.RECRUITER)
+def dismiss_recommendation(request, pk, profile_pk):
+    job = get_object_or_404(Job, pk=pk, owner=request.user)
+    if request.method == 'POST':
+        profile = get_object_or_404(Profile, pk=profile_pk, role=Role.SEEKER)
+        DismissedRecommendation.objects.get_or_create(job=job, profile=profile)
+        messages.success(
+            request,
+            f'{profile.display_name} won’t be recommended for this job again.',
+        )
+    return redirect('jobs.applicants', pk=job.pk)
+
+
+@require_role(Role.RECRUITER)
+def restore_recommendations(request, pk):
+    job = get_object_or_404(Job, pk=pk, owner=request.user)
+    if request.method == 'POST':
+        job.dismissed_recommendations.all().delete()
+        messages.success(request, 'Dismissed candidates restored.')
+    return redirect('jobs.applicants', pk=job.pk)
 
 
 @require_role(Role.RECRUITER)
@@ -308,16 +381,17 @@ def candidates(request):
     queryset = filter_candidates(queryset, filters)
 
     sort = request.GET.get('sort', 'relevance')
+    result_count = queryset.count()
     if sort == 'updated':
         queryset = queryset.order_by('-updated_at')
     else:
-        queryset = queryset.order_by('-updated_at')
+        queryset = rank_candidates(queryset, filters)
 
     template_data = {
         'title': 'Candidates',
         'candidates': queryset,
         'filters': filters,
-        'result_count': queryset.count(),
+        'result_count': result_count,
         'sort': sort,
     }
     return render(request, 'jobs/candidates.html', {'template_data': template_data})
@@ -346,7 +420,14 @@ def candidate_detail(request, pk):
 
 @require_role(Role.RECRUITER)
 def saved_searches(request):
-    searches = SavedSearch.objects.filter(recruiter=request.user)
+    searches = [
+        {
+            'search': search,
+            'filters': describe_filters(search.filters or {}),
+            'match_count': len(matching_profile_ids(search)),
+        }
+        for search in SavedSearch.objects.filter(recruiter=request.user)
+    ]
     template_data = {
         'title': 'Saved searches',
         'searches': searches,
@@ -365,8 +446,11 @@ def saved_search_create(request):
             search = form.save(commit=False)
             search.recruiter = request.user
             search.filters = filters
+            search.seen_profile_ids = matching_profile_ids(search)
             search.save()
-            messages.success(request, 'Search saved.')
+            messages.success(
+                request, 'Search saved. New candidates who match will show up in Alerts.'
+            )
             return redirect('jobs.saved_searches')
     else:
         form = SavedSearchForm(initial={'notify_in_app': True})
@@ -378,8 +462,32 @@ def saved_search_create(request):
     template_data = {
         'title': 'Save search',
         'form': form,
-        'filters': filters,
+        'filters': describe_filters(filters),
         'match_count': match_count,
+    }
+    return render(
+        request, 'jobs/saved_search_form.html', {'template_data': template_data}
+    )
+
+
+@require_role(Role.RECRUITER)
+def saved_search_edit(request, pk):
+    search = get_object_or_404(SavedSearch, pk=pk, recruiter=request.user)
+    if request.method == 'POST':
+        form = SavedSearchForm(request.POST, instance=search)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Saved search updated.')
+            return redirect('jobs.saved_searches')
+    else:
+        form = SavedSearchForm(instance=search)
+
+    template_data = {
+        'title': 'Edit saved search',
+        'form': form,
+        'search': search,
+        'filters': describe_filters(search.filters or {}),
+        'match_count': len(matching_profile_ids(search)),
     }
     return render(
         request, 'jobs/saved_search_form.html', {'template_data': template_data}
@@ -389,10 +497,8 @@ def saved_search_create(request):
 @require_role(Role.RECRUITER)
 def saved_search_run(request, pk):
     search = get_object_or_404(SavedSearch, pk=pk, recruiter=request.user)
-    params = '&'.join(
-        f'{k}={v}' for k, v in (search.filters or {}).items() if v
-    )
-    url = '/candidates/'
+    params = urlencode({k: v for k, v in (search.filters or {}).items() if v})
+    url = reverse('jobs.candidates')
     if params:
         url = f'{url}?{params}'
     return redirect(url)

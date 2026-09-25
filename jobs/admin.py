@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import Application, Job, Notification, SavedSearch
+from .models import (
+    Application,
+    DismissedRecommendation,
+    Job,
+    Notification,
+    SavedSearch,
+)
 
 
 class ApplicationInline(admin.TabularInline):
@@ -23,6 +29,11 @@ class ApplicationAdmin(admin.ModelAdmin):
     list_display = ('seeker', 'job', 'status', 'updated_at')
     list_filter = ('status',)
     search_fields = ('seeker__username', 'job__title')
+
+
+@admin.register(DismissedRecommendation)
+class DismissedRecommendationAdmin(admin.ModelAdmin):
+    list_display = ('job', 'profile', 'created_at')
 
 
 @admin.register(SavedSearch)

@@ -37,6 +37,13 @@
           <label class="label-caps">Projects</label>
           <input class="field" name="projects" value="{{ template_data.filters.projects }}" placeholder="Keyword">
         </div>
+        <div>
+          <label class="label-caps">Sort</label>
+          <select class="field" name="sort">
+            <option value="relevance" {% if template_data.sort == 'relevance' %}selected{% endif %}>Relevance</option>
+            <option value="updated" {% if template_data.sort == 'updated' %}selected{% endif %}>Recently updated</option>
+          </select>
+        </div>
       </div>
       <div class="mt-4 flex flex-wrap gap-2">
         <button class="btn-solid" type="submit">Search</button>

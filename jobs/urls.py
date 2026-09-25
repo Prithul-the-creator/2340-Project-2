@@ -33,6 +33,21 @@ urlpatterns = [
         views.recruiter_applicants,
         name='jobs.applicants',
     ),
+    path(
+        'recruiter/jobs/<int:pk>/invite/<int:profile_pk>/',
+        views.invite_candidate,
+        name='jobs.invite_candidate',
+    ),
+    path(
+        'recruiter/jobs/<int:pk>/dismiss/<int:profile_pk>/',
+        views.dismiss_recommendation,
+        name='jobs.dismiss_recommendation',
+    ),
+    path(
+        'recruiter/jobs/<int:pk>/restore-recommendations/',
+        views.restore_recommendations,
+        name='jobs.restore_recommendations',
+    ),
     path('candidates/', views.candidates, name='jobs.candidates'),
     path('candidates/<int:pk>/', views.candidate_detail, name='jobs.candidate_detail'),
     path('saved-searches/', views.saved_searches, name='jobs.saved_searches'),
@@ -40,6 +55,11 @@ urlpatterns = [
         'saved-searches/new/',
         views.saved_search_create,
         name='jobs.saved_search_create',
+    ),
+    path(
+        'saved-searches/<int:pk>/edit/',
+        views.saved_search_edit,
+        name='jobs.saved_search_edit',
     ),
     path(
         'saved-searches/<int:pk>/run/',

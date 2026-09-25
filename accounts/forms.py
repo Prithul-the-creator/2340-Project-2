@@ -12,7 +12,7 @@ from .models import (
     Profile,
     Project,
     Role,
-    Skill,
+    skills_from_text,
 )
 
 
@@ -113,13 +113,7 @@ class ProfileBasicsForm(forms.ModelForm):
         return profile
 
     def _save_skills(self, profile):
-        raw = self.cleaned_data.get('skills_text', '')
-        names = [n.strip() for n in raw.split(',') if n.strip()]
-        skills = []
-        for name in names:
-            skill, _ = Skill.objects.get_or_create(name=name)
-            skills.append(skill)
-        profile.skills.set(skills)
+        profile.skills.set(skills_from_text(self.cleaned_data.get('skills_text')))
 
 
 class PrivacyForm(forms.ModelForm):
@@ -198,13 +192,7 @@ class ProjectForm(forms.ModelForm):
     def save(self, commit=True):
         project = super().save(commit=commit)
         if commit:
-            raw = self.cleaned_data.get('skills_text', '')
-            names = [n.strip() for n in raw.split(',') if n.strip()]
-            skills = []
-            for name in names:
-                skill, _ = Skill.objects.get_or_create(name=name)
-                skills.append(skill)
-            project.skills.set(skills)
+            project.skills.set(skills_from_text(self.cleaned_data.get('skills_text')))
         return project
 
 

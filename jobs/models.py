@@ -117,6 +117,24 @@ class Application(models.Model):
         return f'{self.seeker} → {self.job} ({self.status})'
 
 
+class DismissedRecommendation(models.Model):
+    job = models.ForeignKey(
+        Job, on_delete=models.CASCADE, related_name='dismissed_recommendations'
+    )
+    profile = models.ForeignKey(
+        'accounts.Profile',
+        on_delete=models.CASCADE,
+        related_name='dismissed_recommendations',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('job', 'profile')]
+
+    def __str__(self):
+        return f'{self.profile} dismissed for {self.job}'
+
+
 class SavedSearch(models.Model):
     recruiter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -127,6 +145,7 @@ class SavedSearch(models.Model):
     filters = models.JSONField(default=dict, blank=True)
     notify_email = models.BooleanField(default=False)
     notify_in_app = models.BooleanField(default=True)
+    seen_profile_ids = models.JSONField(default=list, blank=True)
     last_notified_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

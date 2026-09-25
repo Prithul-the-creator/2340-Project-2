@@ -1,10 +1,25 @@
+from importlib import import_module
+
+from django.apps import apps
 from django.contrib.auth.models import User
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from accounts.models import AccountStatus, Privacy, Profile, Role, Skill
-from jobs.models import Application, ApplicationStatus, Job, JobStatus, SavedSearch
-from jobs.services import recommend_candidates_for_job, visible_seeker_queryset
+from accounts.models import AccountStatus, Privacy, Profile, Project, Role, Skill
+from jobs.models import (
+    Application,
+    ApplicationStatus,
+    DismissedRecommendation,
+    Job,
+    JobStatus,
+    Notification,
+    SavedSearch,
+)
+from jobs.services import (
+    check_saved_searches_for_profile,
+    recommend_candidates_for_job,
+    visible_seeker_queryset,
+)
 
 
 class SeekrCoreTests(TestCase):
@@ -168,3 +183,168 @@ class SeekrCoreTests(TestCase):
         self.client.login(username='seeker1', password='testpass123')
         response = self.client.get(reverse('jobs.recruiter_jobs'))
         self.assertEqual(response.status_code, 302)
+
+    def _make_seeker(self, username, skill_names, location='Atlanta'):
+        user = User.objects.create_user(username=username, password='testpass123')
+        profile = Profile.objects.get(user=user)
+        profile.location = location
+        profile.save()
+        for name in skill_names:
+            skill, _ = Skill.objects.get_or_create(name=name)
+            profile.skills.add(skill)
+        return profile
+
+    def _save_search(self, query, name='Search'):
+        self.client.login(username='recruiter1', password='testpass123')
+        self.client.post(
+            reverse('jobs.saved_search_create') + query,
+            {'name': name, 'notify_in_app': True},
+        )
+        return SavedSearch.objects.get(name=name)
+
+    def test_saved_search_skips_existing_matches(self):
+        search = self._save_search('?skills=Python')
+        self.assertIn(self.seeker_profile.pk, search.seen_profile_ids)
+
+        check_saved_searches_for_profile(self.seeker_profile)
+        self.assertFalse(
+            Notification.objects.filter(
+                user=self.recruiter, notification_type='saved_search'
+            ).exists()
+        )
+
+    def test_saved_search_alerts_new_match_once(self):
+        self._save_search('?skills=Python')
+        newcomer = self._make_seeker('newcomer', ['Python'])
+
+        check_saved_searches_for_profile(newcomer)
+        check_saved_searches_for_profile(newcomer)
+        alerts = Notification.objects.filter(
+            user=self.recruiter, notification_type='saved_search'
+        )
+        self.assertEqual(alerts.count(), 1)
+        self.assertEqual(alerts.first().link, f'/candidates/{newcomer.pk}/')
+
+    def test_education_add_triggers_saved_search(self):
+        self._save_search('?school=Georgia+Tech')
+        self.client.login(username='seeker1', password='testpass123')
+        self.client.post(
+            reverse('accounts.education_add'),
+            {'school': 'Georgia Tech', 'degree': 'BS', 'field': '', 'graduation_year': 2027},
+        )
+        self.assertTrue(
+            Notification.objects.filter(
+                user=self.recruiter, notification_type='saved_search'
+            ).exists()
+        )
+
+    def test_saved_search_run_encodes_filters(self):
+        search = self._save_search('?skills=C%2B%2B')
+        response = self.client.get(reverse('jobs.saved_search_run', args=[search.pk]))
+        self.assertEqual(response['Location'], '/candidates/?skills=C%2B%2B')
+
+    def test_saved_search_edit_updates_alerts(self):
+        search = self._save_search('?skills=Python')
+        self.client.post(
+            reverse('jobs.saved_search_edit', args=[search.pk]),
+            {'name': 'Renamed', 'notify_email': True},
+        )
+        search.refresh_from_db()
+        self.assertEqual(search.name, 'Renamed')
+        self.assertTrue(search.notify_email)
+        self.assertFalse(search.notify_in_app)
+
+    def test_recommendations_ignore_skill_case(self):
+        self.seeker_profile.skills.clear()
+        lower, _ = Skill.objects.get_or_create(name='python')
+        self.seeker_profile.skills.add(lower)
+        results = recommend_candidates_for_job(self.job)
+        self.assertEqual(results[0]['profile'], self.seeker_profile)
+        self.assertIn('Has 1 of 1 required skills: Python', results[0]['reasons'])
+
+    def test_recommendations_skip_location_for_remote_jobs(self):
+        self.job.work_model = 'REMOTE'
+        self.job.save()
+        results = recommend_candidates_for_job(self.job)
+        self.assertFalse(any('Located' in r for r in results[0]['reasons']))
+
+    def test_invite_candidate_notifies_once(self):
+        self.client.login(username='recruiter1', password='testpass123')
+        url = reverse('jobs.invite_candidate', args=[self.job.pk, self.seeker_profile.pk])
+        self.client.post(url)
+        self.client.post(url)
+        invites = Notification.objects.filter(user=self.seeker, notification_type='invite')
+        self.assertEqual(invites.count(), 1)
+
+        response = self.client.get(reverse('jobs.applicants', args=[self.job.pk]))
+        self.assertContains(response, 'Invited')
+
+    def test_invite_requires_active_job(self):
+        self.job.status = JobStatus.DRAFT
+        self.job.save()
+        self.client.login(username='recruiter1', password='testpass123')
+        self.client.post(
+            reverse('jobs.invite_candidate', args=[self.job.pk, self.seeker_profile.pk])
+        )
+        self.assertFalse(Notification.objects.filter(notification_type='invite').exists())
+
+    def test_saved_searches_page_shows_labels_and_matches(self):
+        self._save_search('?skills=Python&graduation_year=2027')
+        response = self.client.get(reverse('jobs.saved_searches'))
+        self.assertContains(response, 'Graduation year: 2027')
+        self.assertContains(response, '0 matches')
+
+    def test_skill_text_reuses_existing_capitalization(self):
+        self.client.login(username='seeker1', password='testpass123')
+        self.client.post(
+            reverse('accounts.profile_edit'),
+            {'headline': 'CS student', 'skills_text': 'python, PYTHON, Go'},
+        )
+        self.assertEqual(Skill.objects.filter(name__iexact='python').count(), 1)
+        self.assertEqual(
+            sorted(self.seeker_profile.skills.values_list('name', flat=True)),
+            ['Go', 'Python'],
+        )
+
+    def test_merge_duplicate_skills_migration(self):
+        duplicate = Skill.objects.create(name='python')
+        self.job.skills.add(duplicate)
+        migration = import_module('accounts.migrations.0002_merge_duplicate_skills')
+        migration.merge_duplicate_skills(apps, None)
+
+        self.assertFalse(Skill.objects.filter(name='python').exists())
+        self.assertEqual(list(self.job.skills.values_list('name', flat=True)), ['Python'])
+
+    def test_candidate_relevance_ranks_project_evidence_first(self):
+        newcomer = self._make_seeker('newcomer', ['Python'])
+        project = Project.objects.create(profile=newcomer, name='Scraper')
+        project.skills.add(Skill.objects.get(name='Python'))
+        self.seeker_profile.save()
+
+        self.client.login(username='recruiter1', password='testpass123')
+        response = self.client.get(reverse('jobs.candidates'), {'skills': 'Python'})
+        content = response.content.decode()
+        self.assertLess(content.index('newcomer'), content.index('seeker1'))
+
+        response = self.client.get(
+            reverse('jobs.candidates'), {'skills': 'Python', 'sort': 'updated'}
+        )
+        content = response.content.decode()
+        self.assertLess(content.index('seeker1'), content.index('newcomer'))
+        self.assertContains(response, '2 candidates')
+
+    def test_dismissed_recommendation_is_hidden_until_restored(self):
+        self.client.login(username='recruiter1', password='testpass123')
+        self.client.post(
+            reverse('jobs.dismiss_recommendation', args=[self.job.pk, self.seeker_profile.pk])
+        )
+        self.assertTrue(DismissedRecommendation.objects.filter(job=self.job).exists())
+        self.assertEqual(recommend_candidates_for_job(self.job), [])
+
+        response = self.client.get(reverse('jobs.applicants', args=[self.job.pk]))
+        self.assertContains(response, '1 dismissed')
+
+        self.client.post(reverse('jobs.restore_recommendations', args=[self.job.pk]))
+        self.assertEqual(
+            recommend_candidates_for_job(self.job)[0]['profile'], self.seeker_profile
+        )

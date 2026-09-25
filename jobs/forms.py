@@ -1,6 +1,6 @@
 from django import forms
 
-from accounts.models import Skill
+from accounts.models import skills_from_text
 
 from .models import (
     Application,
@@ -78,13 +78,7 @@ class JobForm(forms.ModelForm):
         return job
 
     def _save_skills(self, job):
-        raw = self.cleaned_data.get('skills_text', '')
-        names = [n.strip() for n in raw.split(',') if n.strip()]
-        skills = []
-        for name in names:
-            skill, _ = Skill.objects.get_or_create(name=name)
-            skills.append(skill)
-        job.skills.set(skills)
+        job.skills.set(skills_from_text(self.cleaned_data.get('skills_text')))
 
 
 class ApplicationForm(forms.ModelForm):

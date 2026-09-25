@@ -43,7 +43,6 @@
                 <a class="nav-link" href="{% url 'accounts.privacy' %}">Settings</a>
               {% else %}
                 <a class="nav-link" href="{% url 'jobs.list' %}">Jobs</a>
-                <a class="nav-link" href="#features">Features</a>
                 <a class="nav-link" href="{% url 'home.about' %}">About</a>
               {% endif %}
             </div>
@@ -82,7 +81,6 @@
             <a class="btn-outline mt-3 w-full" href="{% url 'accounts.logout' %}">Log out</a>
           {% else %}
             <a class="block rounded-lg px-3 py-2 text-base font-semibold text-foreground hover:bg-slate-50" href="{% url 'jobs.list' %}">Jobs</a>
-            <a class="block rounded-lg px-3 py-2 text-base font-semibold text-foreground hover:bg-slate-50" href="#features">Features</a>
             <a class="block rounded-lg px-3 py-2 text-base font-semibold text-foreground hover:bg-slate-50" href="{% url 'home.about' %}">About</a>
             <a class="btn-dark mt-3 w-full" href="{% url 'accounts.login' %}">Sign in</a>
           {% endif %}

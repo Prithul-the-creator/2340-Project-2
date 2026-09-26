@@ -1,7 +1,9 @@
 # Seekr
 
 Django project shell for an early-career recruiting platform.
-UI patterns come from the Movies Store tutorial.
+UI patterns come from the Movies Store tutorial; there is no cart.
+
+Apps: `home`, `accounts`, `jobs` (placeholder pages only).
 
 ## Setup
 

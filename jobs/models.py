@@ -18,10 +18,18 @@ class Job(models.Model):
 
 
 class Application(models.Model):
+    class Status(models.TextChoices):
+        APPLIED = 'applied', 'Applied'
+        REVIEWED = 'reviewed', 'Reviewed'
+        INTERVIEW = 'interview', 'Interview'
+        OFFER = 'offer', 'Offer'
+        CLOSED = 'closed', 'Closed'
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')
     note = models.TextField(max_length=1000)
     applied_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.APPLIED)
 
     class Meta:
         constraints = [

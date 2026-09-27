@@ -9,6 +9,11 @@ class Profile(models.Model):
     education = models.TextField(blank=True)
     work_experience = models.TextField(blank=True)
     links = models.TextField(blank=True, help_text='Add links, one per line')
+    show_headline_to_recruiters = models.BooleanField(default=True)
+    show_skills_to_recruiters = models.BooleanField(default=True)
+    show_education_to_recruiters = models.BooleanField(default=True)
+    show_work_experience_to_recruiters = models.BooleanField(default=True)
+    show_links_to_recruiters = models.BooleanField(default=True)
 
     def __str__(self):
         return self.user.get_username()

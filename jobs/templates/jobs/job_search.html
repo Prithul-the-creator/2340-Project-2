@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="masthead bg-index text-white text-center py-4">
+  <div class="container pt-2"><h2>Jobs</h2><p>Browse and filter roles.</p></div>
+</header>
+<div class="container py-4">
+  <form method="get" class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label" for="title">Job title</label>
+      <input class="form-control" id="title" name="title" value="{{ filters.title }}">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label" for="skills">Skills</label>
+      <input class="form-control" id="skills" name="skills" value="{{ filters.skills }}" placeholder="Python, Java, Collaboration, etc.">
+    </div>
+    <div class="col-md-4">
+      <label class="form-label" for="location">Location</label>
+      <input class="form-control" id="location" name="location" value="{{ filters.location }}">
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label" for="min_salary">Minimum Salary (Yearly) </label>
+      <input class="form-control" type="number" min="0" id="min_salary" name="min_salary" value="{{ filters.min_salary }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="work_type">Workplace</label>
+      <select class="form-select" id="work_type" name="work_type">
+        <option value="">Any</option>
+        <option value="remote" {% if filters.work_type == 'remote' %}selected{% endif %}>Remote</option>
+        <option value="onsite" {% if filters.work_type == 'onsite' %}selected{% endif %}>On-site</option>
+      </select>
+    </div>
+    <div class="col-md-3 d-flex align-items-end">
+      <div class="form-check mb-2">
+        <input class="form-check-input" type="checkbox" id="visa" name="visa" value="yes" {% if filters.visa == 'yes' %}checked{% endif %}>
+        <label class="form-check-label" for="visa">Visa sponsorship offered</label>
+      </div>
+    </div>
+    <div class="col-12"><button class="btn btn-primary" type="submit">Search</button> <a class="btn btn-outline-secondary" href="{% url 'jobs.index' %}">Clear</a></div>
+  </form>
+  <div class="mt-4">
+    {% for job in jobs %}
+      <article class="border rounded p-3 mb-3">
+        <h3>{{ job.title }}</h3>
+        <p>{{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}</p>
+        {% if job.salary %}
+          <p>Salary: ${{ job.salary }}</p>
+        {% endif %}
+        {% if job.skills %}<p>{{ job.skills }}</p>{% endif %}
+        {% if job.description %}<p>{{ job.description }}</p>{% endif %}
+        <small>
+          {% if job.remote %}Remote{% else %}On-site{% endif %}
+          {% if job.visa_sponsorship %} · Visa sponsorship available{% endif %}
+        </small>
+      </article>
+    {% empty %}<p class="text-muted mt-3">No jobs match those filters.</p>{% endfor %}
+  </div>
+</div>
+
+{% endblock content %}

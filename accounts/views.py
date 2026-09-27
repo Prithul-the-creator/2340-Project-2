@@ -3,6 +3,7 @@ from django.contrib.auth import login as auth_login, authenticate, logout as aut
 from .forms import CustomUserCreationForm, CustomErrorList
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
+from profiles.models import Profile
 
 @login_required
 def logout(request):
@@ -47,4 +48,5 @@ def signup(request):
 @login_required
 def profile(request):
     template_data = {'title': 'Profile'}
-    return render(request, 'accounts/profile.html', {'template_data': template_data})
+    seeker_profile = Profile.objects.filter(user=request.user).first()
+    return render(request, 'accounts/profile.html', {'template_data': template_data, 'seeker_profile': seeker_profile})

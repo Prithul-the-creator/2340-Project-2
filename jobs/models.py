@@ -13,6 +13,8 @@ class Job(models.Model):
     remote_work = models.BooleanField(default=False)
     visa_sponsorship = models.BooleanField(default=False)
 
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='jobs_owned')
+
     def __str__(self):
         return f'{self.title} at {self.company}'
 

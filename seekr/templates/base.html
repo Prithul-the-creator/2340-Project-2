@@ -28,6 +28,12 @@
             {% if user.is_authenticated %}
             <a class="nav-link" href="{% url 'jobs.applications' %}">Applications</a>
             {% endif %}
+            {% if perms.jobs.view_application %}
+            <a class="nav-link" href="{% url 'jobs.recruiter_jobs' %}">My Jobs</a>
+            {% endif %}
+            {% if user.is_staff %}
+            <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>
+            {% endif %}
             <div class="vr bg-white mx-2 d-none d-lg-block"></div>
             {% if user.is_authenticated %}
             <a class="nav-link" href="{% url 'accounts.profile' %}">Profile</a>

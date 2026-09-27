@@ -10,7 +10,7 @@ from .forms import ProfileForm
 def create_profile(req):
     profile, was_createdd = Profile.objects.get_or_create(user=req.user)
     if req.method == 'POST':
-        form = ProfileForm(r.POST, instance=profile)
+        form = ProfileForm(req.POST, instance=profile)
 
         if form.is_valid():
             form.save()

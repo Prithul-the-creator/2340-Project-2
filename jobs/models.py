@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 
 class Job(models.Model):
@@ -14,3 +15,18 @@ class Job(models.Model):
 
     def __str__(self):
         return f'{self.title} at {self.company}'
+
+
+class Application(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE, related_name='applications')
+    note = models.TextField(max_length=1000)
+    applied_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'job'], name='unique_user_job_application'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} applied to {self.job}'

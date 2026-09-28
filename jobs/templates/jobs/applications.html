@@ -17,11 +17,11 @@
           <h3>{{ application.job.title }}</h3>
           <p>{{ application.job.company }}{% if application.job.location %} · {{ application.job.location }}{% endif %}</p>
           <p><strong>Status:</strong> {{ application.get_status_display }}</p>
-          <ol class="d-flex flex-wrap gap-3 ps-3 mb-3">
+          <div class="d-flex flex-wrap gap-2 mb-3">
             {% for status_value, status_label in status_choices %}
-              <li class="{% if application.status == status_value %}fw-bold text-primary{% else %}text-muted{% endif %}">{{ status_label }}</li>
+              <span class="badge {% if application.status == status_value %}text-bg-primary{% else %}text-bg-light border{% endif %}">{{ status_label }}</span>
             {% endfor %}
-          </ol>
+          </div>
           <form method="post" action="{% url 'jobs.update_application_status' application.id %}" class="row g-2 align-items-end mb-3">
             {% csrf_token %}
             <div class="col-sm-5 col-md-4">

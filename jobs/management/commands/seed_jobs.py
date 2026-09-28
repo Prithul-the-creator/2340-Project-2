@@ -8,64 +8,36 @@ ROLE_INFO = {
         'skills': 'Python, Java, JavaScript, React, SQL, Git, Data Structures, Algorithms',
         'employment_type': Job.EmploymentType.INTERN,
         'salary': 45,
-        'descriptions': [
-            'Ship real features alongside our web platform team over a 10-12 week summer internship.',
-            'Pair with senior engineers on our internal tools team to build and test new features.',
-            'Join our mobile team for the summer to design, build, and ship a customer-facing feature.',
-        ],
     },
     'Quantitative Developer Intern': {
         'skills': 'Python, C++, Statistics, Probability, Linear Algebra, Market Microstructure',
         'employment_type': Job.EmploymentType.INTERN,
         'salary': 60,
-        'descriptions': [
-            'Build and backtest trading systems alongside quantitative researchers and traders.',
-            'Prototype pricing models and research tooling used directly by our trading desks.',
-            'Optimize low-latency trading infrastructure alongside our core platform team.',
-        ],
     },
     'Trading Intern': {
         'skills': 'Statistics, Probability, Excel, Market Microstructure, Communication',
         'employment_type': Job.EmploymentType.INTERN,
         'salary': 55,
-        'descriptions': [
-            "Sit with a trading desk to learn market-making and risk management firsthand.",
-            "Support a trading desk's daily flow while learning execution and risk controls.",
-        ],
     },
     'Machine Learning Engineering Intern': {
         'skills': 'Python, Machine Learning, Statistics, SQL, PyTorch',
         'employment_type': Job.EmploymentType.INTERN,
         'salary': 50,
-        'descriptions': [
-            'Train and ship machine learning models that power our recommendation system.',
-            'Build data pipelines and evaluation tooling for our applied ML team.',
-        ],
     },
     'Product Management Intern': {
         'skills': 'Product Strategy, Data Analysis, Communication, Agile, SQL',
         'employment_type': Job.EmploymentType.INTERN,
         'salary': 40,
-        'descriptions': [
-            'Partner with engineering and design to scope and ship a real product feature.',
-            'Run user research and help define requirements for a new product initiative.',
-        ],
     },
     'Software Engineer, New Grad': {
         'skills': 'Python, Java, JavaScript, React, SQL, Git, AWS, Docker, Data Structures, Algorithms',
         'employment_type': Job.EmploymentType.FULL_TIME,
         'salary': 140000,
-        'descriptions': [
-            'Join a product engineering team as a full-time software engineer.',
-        ],
     },
     'Associate Product Manager': {
         'skills': 'Product Strategy, Data Analysis, Communication, Agile, Roadmapping',
         'employment_type': Job.EmploymentType.FULL_TIME,
         'salary': 120000,
-        'descriptions': [
-            'Own a piece of the roadmap and work cross-functionally to ship it.',
-        ],
     },
 }
 
@@ -136,13 +108,12 @@ class Command(BaseCommand):
             Job.objects.filter(company=company['name']).delete()
             for title, count in company['postings']:
                 info = ROLE_INFO[title]
-                for i in range(count):
+                for _ in range(count):
                     Job.objects.create(
                         title=title,
                         company=company['name'],
                         location=company['location'],
                         skills_needed=info['skills'],
-                        description=info['descriptions'][i % len(info['descriptions'])],
                         employment_type=info['employment_type'],
                         salary=info['salary'],
                         remote_work=company['remote_work'],

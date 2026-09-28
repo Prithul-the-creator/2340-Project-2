@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from django.db.models import Count, Q
@@ -30,7 +32,15 @@ def visible_profile_fields(profile):
     return fields
 
 
+def is_recruiter(user):
+    return user.has_perm('jobs.view_application')
+
+
 def index(request):
+    if request.user.is_authenticated and is_recruiter(request.user):
+        messages.info(request, 'Recruiters search for candidates instead of browsing jobs.')
+        return redirect('jobs.candidate_search')
+
     template_data = {'title': 'Jobs'}
     job_matches = Job.objects.all()
     title_search = request.GET.get('title', '').strip()
@@ -77,6 +87,9 @@ def index(request):
 @login_required
 @require_POST
 def apply(request, job_id):
+    if is_recruiter(request.user):
+        return redirect('jobs.candidate_search')
+
     job = get_object_or_404(Job, pk=job_id)
     form = ApplicationForm(request.POST)
     if not form.is_valid():
@@ -97,6 +110,9 @@ def apply(request, job_id):
 
 @login_required
 def applications(request):
+    if is_recruiter(request.user):
+        return redirect('jobs.candidate_search')
+
     template_data = {'title': 'Applications'}
     seeker_applications = Application.objects.filter(user=request.user).select_related('job').order_by('-applied_at')
 
@@ -110,6 +126,9 @@ def applications(request):
 @login_required
 @require_POST
 def update_application_status(request, application_id):
+    if is_recruiter(request.user):
+        return redirect('jobs.candidate_search')
+
     application = get_object_or_404(Application, pk=application_id, user=request.user)
     status = request.POST.get('status')
     if status not in Application.Status.values:
@@ -198,10 +217,12 @@ def candidate_search(request):
 @permission_required('jobs.view_application', raise_exception=True)
 @require_POST
 def save_search(request):
-    skills_wanted = ', '.join(request.GET.getlist('skills'))
+    selected_skills = request.POST.getlist('skills')
+    skills_wanted = ', '.join(selected_skills)
     SavedSearch.objects.get_or_create(recruiter=request.user, skills=skills_wanted)
     messages.success(request, 'Search saved. We\'ll notify you about new matches.')
-    return redirect(f"{reverse('jobs.candidate_search')}?{request.GET.urlencode()}")
+    query = urlencode({'skills': selected_skills}, doseq=True)
+    return redirect(f"{reverse('jobs.candidate_search')}?{query}")
 
 
 @login_required

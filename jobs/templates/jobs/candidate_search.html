@@ -8,6 +8,7 @@
     {% for message in messages %}<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>{% endfor %}
   {% endif %}
   <form method="get" class="row g-3">
+    {% csrf_token %}
     <div class="col-12">
       <label class="form-label">Skills</label>
       <div class="skill-checklist skill-checklist-wide">
@@ -21,7 +22,7 @@
     </div>
     <div class="col-12 d-flex gap-2">
       <button class="btn btn-primary" type="submit">Search</button>
-      <button class="btn btn-outline-secondary" type="submit" formaction="{% url 'jobs.save_search' %}" title="Save this search">
+      <button class="btn btn-outline-secondary" type="submit" formmethod="post" formaction="{% url 'jobs.save_search' %}" title="Save this search">
         <i class="fas fa-bookmark"></i>
       </button>
     </div>

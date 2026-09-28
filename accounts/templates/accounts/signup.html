@@ -10,7 +10,26 @@
             <hr />
             <form method="POST">
               {% csrf_token %}
-              {{ template_data.form.as_p }}
+              {% with form=template_data.form %}
+              <label class="form-label">I'm signing up as</label>
+              <div class="btn-group w-100 mb-3" role="group">
+                <input type="radio" class="btn-check" name="account_type" id="type-applicant" value="applicant"
+                       {% if form.account_type.value != 'recruiter' %}checked{% endif %}>
+                <label class="btn btn-outline-dark" for="type-applicant">Applicant</label>
+
+                <input type="radio" class="btn-check" name="account_type" id="type-recruiter" value="recruiter"
+                       {% if form.account_type.value == 'recruiter' %}checked{% endif %}>
+                <label class="btn btn-outline-dark" for="type-recruiter">Recruiter</label>
+              </div>
+              {{ form.account_type.errors }}
+
+              {% for field in form %}
+                {% if field.name != 'account_type' %}
+                <p>{{ field.label_tag }} {{ field }} {{ field.errors }}</p>
+                {% endif %}
+              {% endfor %}
+              {{ form.non_field_errors }}
+              {% endwith %}
               <button type="submit" class="btn bg-dark text-white">
                 Sign Up
               </button>

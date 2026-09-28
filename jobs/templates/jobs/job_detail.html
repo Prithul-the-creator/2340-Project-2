@@ -11,7 +11,10 @@
   <a class="btn btn-outline-secondary btn-sm" href="{% url 'jobs.applicants' job.id %}">Review applicants</a>
 
   <h4 class="mt-4">Recommended candidates</h4>
-  <p class="text-muted">Candidates whose skills line up with: {{ job.skills_needed }}</p>
+  <p class="text-muted">
+    Candidates whose skills line up with:
+    {% for skill in job_skills %}<span class="badge text-bg-light border">{{ skill }}</span>{% endfor %}
+  </p>
   {% for candidate in recommendations %}
     <article class="border rounded p-3 mb-3">
       <h5>{{ candidate.profile.user.get_username }}</h5>

@@ -1,3 +1,38 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.masthead {
+  padding-top: 3rem !important;
+  padding-bottom: 3rem !important;
+}
+
+.btn-primary {
+  background-color: #B8860B;
+  border-color: #B8860B;
+  color: #1C1917;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #96700A;
+  border-color: #96700A;
+  color: #1C1917;
+}
+
+.skill-checklist {
+  max-height: 260px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.skill-checklist-wide {
+  column-count: 3;
+}
+
 .bg-index{
   background: url("/static/img/background.jpg") no-repeat fixed;
   background-size: 100% auto;
@@ -21,7 +56,7 @@
 }
 
 .ms-footer a:hover {
-  color: #6ab43e;
+  color: #B8860B;
   text-decoration: none;
 }
 
@@ -31,7 +66,7 @@
 }
 
 .ms-footer-bottom a {
-  color: #6ab43e;
+  color: #B8860B;
   text-decoration: none;
 }
 

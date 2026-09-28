@@ -6,6 +6,15 @@ from django.dispatch import receiver
 from profiles.models import Profile
 
 
+SKILL_OPTIONS = [
+    'Agile', 'Algorithms', 'AWS', 'Communication', 'C++', 'Data Analysis',
+    'Data Structures', 'Docker', 'Excel/VBA', 'Git', 'Java', 'JavaScript',
+    'Linear Algebra', 'Machine Learning', 'Market Microstructure', 'Probability',
+    'Product Strategy', 'PyTorch', 'Python', 'React', 'Roadmapping', 'SQL',
+    'Statistics',
+]
+
+
 def split_skills(text):
     return [skill.strip() for skill in (text or '').split(',') if skill.strip()]
 

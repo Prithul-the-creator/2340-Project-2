@@ -1,77 +1,95 @@
 {% extends 'base.html' %}
 {% block content %}
 <header class="masthead bg-index text-white text-center py-4">
-  <div class="container pt-2"><h2>Jobs</h2><p>Browse and filter roles.</p></div>
+  <div class="container pt-2"><h2>Jobs</h2><p>Browse and filter early-career roles.</p></div>
 </header>
 <div class="container py-4">
   {% if messages %}
     {% for message in messages %}<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>{% endfor %}
   {% endif %}
-  <form method="get" class="row g-3">
-    <div class="col-md-4">
-      <label class="form-label" for="title">Job title</label>
-      <input class="form-control" id="title" name="title" value="{{ filters.title }}">
-    </div>
-    <div class="col-md-4">
-      <label class="form-label" for="skills">Skills</label>
-      <input class="form-control" id="skills" name="skills" value="{{ filters.skills }}" placeholder="Python, Java, Collaboration, etc.">
-    </div>
-    <div class="col-md-4">
-      <label class="form-label" for="location">Location</label>
-      <input class="form-control" id="location" name="location" value="{{ filters.location }}">
-    </div>
-
-    <div class="col-md-3">
-      <label class="form-label" for="min_salary">Minimum Salary (Yearly) </label>
-      <input class="form-control" type="number" min="0" id="min_salary" name="min_salary" value="{{ filters.min_salary }}">
-    </div>
-    <div class="col-md-3">
-      <label class="form-label" for="work_type">Workplace</label>
-      <select class="form-select" id="work_type" name="work_type">
-        <option value="">Any</option>
-        <option value="remote" {% if filters.work_type == 'remote' %}selected{% endif %}>Remote</option>
-        <option value="onsite" {% if filters.work_type == 'onsite' %}selected{% endif %}>On-site</option>
-      </select>
-    </div>
-    <div class="col-md-3 d-flex align-items-end">
-      <div class="form-check mb-2">
-        <input class="form-check-input" type="checkbox" id="visa" name="visa" value="yes" {% if filters.visa == 'yes' %}checked{% endif %}>
-        <label class="form-check-label" for="visa">Visa sponsorship offered</label>
-      </div>
-    </div>
-    <div class="col-12"><button class="btn btn-primary" type="submit">Search</button> <a class="btn btn-outline-secondary" href="{% url 'jobs.index' %}">Clear</a></div>
-  </form>
-  <div class="mt-4">
-    {% for job in jobs %}
-      <article class="border rounded p-3 mb-3">
-        <h3>{{ job.title }}</h3>
-        <p>{{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}</p>
-        {% if job.salary %}
-          <p>Salary: ${{ job.salary }}</p>
-        {% endif %}
-        {% if job.skills_needed %}<p>{{ job.skills_needed }}</p>{% endif %}
-        {% if job.description %}<p>{{ job.description }}</p>{% endif %}
-        <small>
-          {% if job.remote_work %}Remote{% else %}On-site{% endif %}
-          {% if job.visa_sponsorship %} · Visa sponsorship available{% endif %}
-        </small>
-        <div class="mt-3">
-          {% if not user.is_authenticated %}
-            <a class="btn btn-primary btn-sm" href="{% url 'accounts.login' %}">Log in to apply</a>
-          {% elif job.id in applied_job_ids %}
-            <span class="text-success">Applied</span>
-          {% else %}
-            <form method="post" action="{% url 'jobs.apply' job.id %}">
-              {% csrf_token %}
-              <label class="form-label" for="note-{{ job.id }}">Note to the recruiter</label>
-              <textarea class="form-control mb-2" id="note-{{ job.id }}" name="note" rows="2" maxlength="1000" required placeholder="Add a short note about why this role interests you"></textarea>
-              <button class="btn btn-primary btn-sm" type="submit">Apply with note</button>
-            </form>
-          {% endif %}
+  <div class="row g-4">
+    <aside class="col-lg-3">
+      <form method="get" class="border rounded p-3">
+        <div class="mb-3">
+          <label class="form-label" for="title">Job title</label>
+          <input class="form-control" id="title" name="title" value="{{ filters.title }}">
         </div>
-      </article>
-    {% empty %}<p class="text-muted mt-3">No jobs match those filters.</p>{% endfor %}
+        <div class="mb-3">
+          <label class="form-label" for="location">Location</label>
+          <input class="form-control" id="location" name="location" value="{{ filters.location }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="min_salary">Minimum Salary (Yearly)</label>
+          <input class="form-control" type="number" min="0" id="min_salary" name="min_salary" value="{{ filters.min_salary }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="work_type">Workplace</label>
+          <select class="form-select" id="work_type" name="work_type">
+            <option value="">Any</option>
+            <option value="remote" {% if filters.work_type == 'remote' %}selected{% endif %}>Remote</option>
+            <option value="onsite" {% if filters.work_type == 'onsite' %}selected{% endif %}>On-site</option>
+          </select>
+        </div>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="visa" name="visa" value="yes" {% if filters.visa == 'yes' %}checked{% endif %}>
+          <label class="form-check-label" for="visa">Visa sponsorship offered</label>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Skills</label>
+          <div class="skill-checklist">
+            {% for skill in skill_options %}
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="skill-{{ forloop.counter }}" name="skills" value="{{ skill }}" {% if skill in selected_skills %}checked{% endif %}>
+                <label class="form-check-label" for="skill-{{ forloop.counter }}">{{ skill }}</label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">Search</button>
+        <a class="btn btn-outline-secondary w-100 mt-2" href="{% url 'jobs.index' %}">Clear</a>
+      </form>
+    </aside>
+    <section class="col-lg-9">
+      <p class="text-muted">{{ listings|length }} role{{ listings|length|pluralize }} found</p>
+      {% for listing in listings %}
+        {% with job=listing.job %}
+        <article class="border rounded p-3 mb-3">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+              <div class="text-muted small">{{ job.company }}</div>
+              <h3 class="mb-1">{{ job.title }}</h3>
+              <div class="mb-2">
+                <span class="badge text-bg-light border">{{ job.location }}</span>
+                {% if job.remote_work %}<span class="badge text-bg-light border">Remote</span>{% endif %}
+                {% if job.visa_sponsorship %}<span class="badge text-bg-light border">Visa sponsorship</span>{% endif %}
+              </div>
+            </div>
+            {% if job.salary %}<div class="fw-semibold">${{ job.salary }}</div>{% endif %}
+          </div>
+          {% if job.description %}<p>{{ job.description }}</p>{% endif %}
+          {% if listing.skills %}
+            <div class="mb-2">
+              {% for skill in listing.skills %}<span class="badge text-bg-light border">{{ skill }}</span>{% endfor %}
+            </div>
+          {% endif %}
+          <div class="mt-3">
+            {% if not user.is_authenticated %}
+              <a class="btn btn-primary btn-sm" href="{% url 'accounts.login' %}">Log in to apply</a>
+            {% elif job.id in applied_job_ids %}
+              <span class="text-success">Applied</span>
+            {% else %}
+              <form method="post" action="{% url 'jobs.apply' job.id %}">
+                {% csrf_token %}
+                <label class="form-label" for="note-{{ job.id }}">Note to the recruiter</label>
+                <textarea class="form-control mb-2" id="note-{{ job.id }}" name="note" rows="2" maxlength="1000" required placeholder="Add a short note about why this role interests you"></textarea>
+                <button class="btn btn-primary btn-sm" type="submit">Apply with note</button>
+              </form>
+            {% endif %}
+          </div>
+        </article>
+        {% endwith %}
+      {% empty %}<p class="text-muted mt-3">No jobs match those filters.</p>{% endfor %}
+    </section>
   </div>
 </div>
-
 {% endblock content %}

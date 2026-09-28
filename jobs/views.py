@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from profiles.models import Profile
 
 from .forms import ApplicationForm
-from .models import Application, Job, Notification, SavedSearch, matching_skills
+from .models import SKILL_OPTIONS, Application, Job, Notification, SavedSearch, matching_skills, split_skills
 
 PROFILE_FIELDS = [
     ('headline', 'Headline', 'show_headline_to_recruiters'),
@@ -34,7 +34,7 @@ def index(request):
     template_data = {'title': 'Jobs'}
     job_matches = Job.objects.all()
     title_search = request.GET.get('title', '').strip()
-    skills_desired = request.GET.get('skills', '').strip()
+    skills_desired = request.GET.getlist('skills')
     place_desired = request.GET.get('location', '').strip()
     pay_floor = request.GET.get('min_salary', '').strip()
     work_env = request.GET.get('work_type', '')
@@ -42,9 +42,10 @@ def index(request):
     if title_search:
         job_matches = job_matches.filter(title__icontains=title_search)
     if skills_desired:
-        for skill in skills_desired.split(','):
-            if skill.strip():
-                job_matches = job_matches.filter(skills_needed__icontains=skill.strip())
+        skill_filter = Q()
+        for skill in skills_desired:
+            skill_filter |= Q(skills_needed__icontains=skill)
+        job_matches = job_matches.filter(skill_filter)
     if place_desired:
         job_matches = job_matches.filter(location__icontains=place_desired)
     if pay_floor.isdigit():
@@ -56,12 +57,17 @@ def index(request):
     if request.GET.get('visa') == 'yes':
         job_matches = job_matches.filter(visa_sponsorship=True)
 
+    applied_job_ids = set(Application.objects.filter(user=request.user).values_list('job_id', flat=True)) \
+        if request.user.is_authenticated else set()
+    listings = [{'job': job, 'skills': split_skills(job.skills_needed)} for job in job_matches]
+
     return render(request, 'jobs/job_search.html', {
         'template_data': template_data,
-        'jobs': job_matches,
+        'listings': listings,
         'filters': request.GET,
-        'applied_job_ids': set(Application.objects.filter(user=request.user).values_list('job_id', flat=True))
-        if request.user.is_authenticated else set(),
+        'skill_options': SKILL_OPTIONS,
+        'selected_skills': set(skills_desired),
+        'applied_job_ids': applied_job_ids,
     })
 
 
@@ -167,7 +173,7 @@ def review_application_status(request, application_id):
 @permission_required('jobs.view_application', raise_exception=True)
 def candidate_search(request):
     template_data = {'title': 'Find Candidates'}
-    skills_wanted = request.GET.get('skills', '').strip()
+    skills_wanted = ', '.join(request.GET.getlist('skills'))
 
     candidates = []
     profiles = Profile.objects.filter(show_skills_to_recruiters=True).exclude(skills='').select_related('user')
@@ -180,7 +186,8 @@ def candidate_search(request):
     return render(request, 'jobs/candidate_search.html', {
         'template_data': template_data,
         'candidates': candidates,
-        'filters': request.GET,
+        'skill_options': SKILL_OPTIONS,
+        'selected_skills': set(request.GET.getlist('skills')),
     })
 
 
@@ -188,10 +195,10 @@ def candidate_search(request):
 @permission_required('jobs.view_application', raise_exception=True)
 @require_POST
 def save_search(request):
-    skills_wanted = request.GET.get('skills', '').strip()
+    skills_wanted = ', '.join(request.GET.getlist('skills'))
     SavedSearch.objects.get_or_create(recruiter=request.user, skills=skills_wanted)
     messages.success(request, 'Search saved. We\'ll notify you about new matches.')
-    return redirect(f"{reverse('jobs.candidate_search')}?skills={skills_wanted}")
+    return redirect(f"{reverse('jobs.candidate_search')}?{request.GET.urlencode()}")
 
 
 @login_required
@@ -223,5 +230,6 @@ def job_detail(request, job_id):
     return render(request, 'jobs/job_detail.html', {
         'template_data': template_data,
         'job': job,
+        'job_skills': split_skills(job.skills_needed),
         'recommendations': recommendations,
     })

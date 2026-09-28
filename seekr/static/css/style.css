@@ -11,15 +11,16 @@ body {
 }
 
 .btn-primary {
-  background-color: #B8860B;
-  border-color: #B8860B;
+  background-color: #D4AF37;
+  border-color: #D4AF37;
   color: #1C1917;
+  font-weight: 600;
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
-  background-color: #96700A;
-  border-color: #96700A;
+  background-color: #B8952E;
+  border-color: #B8952E;
   color: #1C1917;
 }
 
@@ -56,7 +57,7 @@ body {
 }
 
 .ms-footer a:hover {
-  color: #B8860B;
+  color: #D4AF37;
   text-decoration: none;
 }
 
@@ -66,7 +67,7 @@ body {
 }
 
 .ms-footer-bottom a {
-  color: #B8860B;
+  color: #D4AF37;
   text-decoration: none;
 }
 

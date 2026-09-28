@@ -8,7 +8,7 @@ from profiles.models import Profile
 
 SKILL_OPTIONS = [
     'Agile', 'Algorithms', 'AWS', 'Communication', 'C++', 'Data Analysis',
-    'Data Structures', 'Docker', 'Excel/VBA', 'Git', 'Java', 'JavaScript',
+    'Data Structures', 'Docker', 'Excel', 'Git', 'Java', 'JavaScript',
     'Linear Algebra', 'Machine Learning', 'Market Microstructure', 'Probability',
     'Product Strategy', 'PyTorch', 'Python', 'React', 'Roadmapping', 'SQL',
     'Statistics',
@@ -27,12 +27,17 @@ def matching_skills(wanted_text, have_text):
 
 
 class Job(models.Model):
+    class EmploymentType(models.TextChoices):
+        INTERN = 'intern', 'Internship'
+        FULL_TIME = 'full_time', 'Full-time'
+
     title = models.CharField(max_length=255)
     company = models.CharField(max_length=255)
     location = models.CharField(max_length=200, blank=True)
     skills_needed = models.TextField(blank=True, help_text='Separate your skills with commas')
     description = models.TextField(blank=True)
-    salary = models.PositiveIntegerField(null=True, blank=True, help_text='Yearly salary')
+    employment_type = models.CharField(max_length=10, choices=EmploymentType.choices, default=EmploymentType.FULL_TIME)
+    salary = models.PositiveIntegerField(null=True, blank=True, help_text='Hourly wage for internships, yearly salary for full-time roles')
 
     remote_work = models.BooleanField(default=False)
     visa_sponsorship = models.BooleanField(default=False)

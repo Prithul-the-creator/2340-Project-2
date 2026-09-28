@@ -19,7 +19,15 @@
           <input class="form-control" id="location" name="location" value="{{ filters.location }}">
         </div>
         <div class="mb-3">
-          <label class="form-label" for="min_salary">Minimum Salary (Yearly)</label>
+          <label class="form-label" for="employment_type">Employment type</label>
+          <select class="form-select" id="employment_type" name="employment_type">
+            <option value="">Any</option>
+            <option value="intern" {% if filters.employment_type == 'intern' %}selected{% endif %}>Internship</option>
+            <option value="full_time" {% if filters.employment_type == 'full_time' %}selected{% endif %}>Full-time</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="min_salary">Minimum Pay</label>
           <input class="form-control" type="number" min="0" id="min_salary" name="min_salary" value="{{ filters.min_salary }}">
         </div>
         <div class="mb-3">
@@ -59,12 +67,17 @@
               <div class="text-muted small">{{ job.company }}</div>
               <h3 class="mb-1">{{ job.title }}</h3>
               <div class="mb-2">
+                <span class="badge text-bg-light border">{{ job.get_employment_type_display }}</span>
                 <span class="badge text-bg-light border">{{ job.location }}</span>
                 {% if job.remote_work %}<span class="badge text-bg-light border">Remote</span>{% endif %}
                 {% if job.visa_sponsorship %}<span class="badge text-bg-light border">Visa sponsorship</span>{% endif %}
               </div>
             </div>
-            {% if job.salary %}<div class="fw-semibold">${{ job.salary }}</div>{% endif %}
+            {% if job.salary %}
+              <div class="fw-semibold">
+                {% if job.employment_type == 'intern' %}${{ job.salary }}/hr{% else %}${{ job.salary }}/yr{% endif %}
+              </div>
+            {% endif %}
           </div>
           {% if job.description %}<p>{{ job.description }}</p>{% endif %}
           {% if listing.skills %}

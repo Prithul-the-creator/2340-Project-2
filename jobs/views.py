@@ -38,6 +38,7 @@ def index(request):
     place_desired = request.GET.get('location', '').strip()
     pay_floor = request.GET.get('min_salary', '').strip()
     work_env = request.GET.get('work_type', '')
+    employment_type = request.GET.get('employment_type', '')
 
     if title_search:
         job_matches = job_matches.filter(title__icontains=title_search)
@@ -48,6 +49,8 @@ def index(request):
         job_matches = job_matches.filter(skill_filter)
     if place_desired:
         job_matches = job_matches.filter(location__icontains=place_desired)
+    if employment_type in Job.EmploymentType.values:
+        job_matches = job_matches.filter(employment_type=employment_type)
     if pay_floor.isdigit():
         job_matches = job_matches.filter(salary__gte=int(pay_floor))
     if work_env == 'remote':

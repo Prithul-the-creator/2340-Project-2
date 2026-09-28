@@ -126,23 +126,6 @@ def applications(request):
 
 
 @login_required
-@require_POST
-def update_application_status(request, application_id):
-    if is_recruiter(request.user):
-        return redirect('jobs.candidate_search')
-
-    application = get_object_or_404(Application, pk=application_id, user=request.user)
-    status = request.POST.get('status')
-    if status not in Application.Status.values:
-        messages.error(request, 'Choose a valid application status.')
-    else:
-        application.status = status
-        application.save(update_fields=['status'])
-        messages.success(request, 'Application status updated.')
-    return redirect('jobs.applications')
-
-
-@login_required
 @permission_required('jobs.view_application', raise_exception=True)
 def recruiter_jobs(request):
     template_data = {'title': 'My Jobs'}

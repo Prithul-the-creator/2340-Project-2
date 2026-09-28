@@ -22,18 +22,6 @@
               <span class="badge {% if application.status == status_value %}text-bg-primary{% else %}text-bg-light border{% endif %}">{{ status_label }}</span>
             {% endfor %}
           </div>
-          <form method="post" action="{% url 'jobs.update_application_status' application.id %}" class="row g-2 align-items-end mb-3">
-            {% csrf_token %}
-            <div class="col-sm-5 col-md-4">
-              <label class="form-label" for="status-{{ application.id }}">Update status</label>
-              <select class="form-select" id="status-{{ application.id }}" name="status">
-                {% for status_value, status_label in status_choices %}
-                  <option value="{{ status_value }}" {% if application.status == status_value %}selected{% endif %}>{{ status_label }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div class="col-auto"><button class="btn btn-outline-primary" type="submit">Save status</button></div>
-          </form>
           <p><strong>Your note:</strong> {{ application.note|linebreaksbr }}</p>
           <small class="text-muted">Applied {{ application.applied_at|date:"M j, Y" }}</small>
         </article>

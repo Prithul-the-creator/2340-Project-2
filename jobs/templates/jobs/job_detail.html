@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="masthead bg-index text-white text-center py-4">
+  <div class="container d-flex align-items-center flex-column pt-2">
+    <h2>{{ job.title }}</h2>
+    <p>{{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}</p>
+  </div>
+</header>
+<div class="container py-4">
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'jobs.recruiter_jobs' %}">Back to my jobs</a>
+  <a class="btn btn-outline-secondary btn-sm" href="{% url 'jobs.applicants' job.id %}">Review applicants</a>
+
+  <h4 class="mt-4">Recommended candidates</h4>
+  <p class="text-muted">Candidates whose skills line up with: {{ job.skills_needed }}</p>
+  {% for candidate in recommendations %}
+    <article class="border rounded p-3 mb-3">
+      <h5>{{ candidate.profile.user.get_username }}</h5>
+      {% if candidate.profile.headline and candidate.profile.show_headline_to_recruiters %}<p>{{ candidate.profile.headline }}</p>{% endif %}
+      <p><strong>Skills:</strong> {{ candidate.profile.skills }}</p>
+      <p class="text-success">Matches: {{ candidate.matches|join:", " }}</p>
+    </article>
+  {% empty %}<p class="text-muted mt-3">No candidates match this job's skills yet.</p>{% endfor %}
+</div>
+{% endblock content %}

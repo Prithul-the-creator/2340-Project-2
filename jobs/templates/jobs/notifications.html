@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="masthead bg-index text-white text-center py-4">
+  <div class="container pt-2"><h2>Notifications</h2></div>
+</header>
+<div class="container py-4">
+  {% for notification in notifications %}
+    <article class="border rounded p-3 mb-3">
+      <h5>{{ notification.subject }}</h5>
+      <p>{{ notification.description }}</p>
+      <small class="text-muted">{{ notification.created_at|date:"M j, Y" }}</small>
+    </article>
+  {% empty %}<p class="text-muted mt-3">No notifications yet.</p>{% endfor %}
+</div>
+{% endblock content %}

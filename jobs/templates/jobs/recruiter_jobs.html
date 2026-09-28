@@ -15,6 +15,7 @@
           <p>{{ job.company }}{% if job.location %} · {{ job.location }}{% endif %}</p>
           <p><strong>Applicants:</strong> {{ job.applicant_count }}</p>
           <a class="btn bg-dark text-white btn-sm" href="{% url 'jobs.applicants' job.id %}">Review applicants</a>
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'jobs.job_detail' job.id %}">View details</a>
         </article>
       {% empty %}
         <p class="text-muted">You don’t own any job postings yet.</p>

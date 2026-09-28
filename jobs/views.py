@@ -2,12 +2,13 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from profiles.models import Profile
 
 from .forms import ApplicationForm
-from .models import Application, Job
+from .models import Application, Job, Notification, SavedSearch, matching_skills
 
 PROFILE_FIELDS = [
     ('headline', 'Headline', 'show_headline_to_recruiters'),
@@ -160,3 +161,67 @@ def review_application_status(request, application_id):
         application.save(update_fields=['status'])
         messages.success(request, f'Updated {application.user.username} to {application.get_status_display()}.')
     return redirect('jobs.applicants', job_id=application.job_id)
+
+
+@login_required
+@permission_required('jobs.view_application', raise_exception=True)
+def candidate_search(request):
+    template_data = {'title': 'Find Candidates'}
+    skills_wanted = request.GET.get('skills', '').strip()
+
+    candidates = []
+    profiles = Profile.objects.filter(show_skills_to_recruiters=True).exclude(skills='').select_related('user')
+    for profile in profiles:
+        matches = matching_skills(skills_wanted, profile.skills) if skills_wanted else []
+        if skills_wanted and not matches:
+            continue
+        candidates.append({'profile': profile, 'matches': matches})
+
+    return render(request, 'jobs/candidate_search.html', {
+        'template_data': template_data,
+        'candidates': candidates,
+        'filters': request.GET,
+    })
+
+
+@login_required
+@permission_required('jobs.view_application', raise_exception=True)
+@require_POST
+def save_search(request):
+    skills_wanted = request.GET.get('skills', '').strip()
+    SavedSearch.objects.get_or_create(recruiter=request.user, skills=skills_wanted)
+    messages.success(request, 'Search saved. We\'ll notify you about new matches.')
+    return redirect(f"{reverse('jobs.candidate_search')}?skills={skills_wanted}")
+
+
+@login_required
+@permission_required('jobs.view_application', raise_exception=True)
+def notifications(request):
+    template_data = {'title': 'Notifications'}
+    recruiter_notifications = list(Notification.objects.filter(recruiter=request.user))
+    Notification.objects.filter(recruiter=request.user, is_read=False).update(is_read=True)
+
+    return render(request, 'jobs/notifications.html', {
+        'template_data': template_data,
+        'notifications': recruiter_notifications,
+    })
+
+
+@login_required
+@permission_required('jobs.view_application', raise_exception=True)
+def job_detail(request, job_id):
+    job = get_object_or_404(Job, pk=job_id, owner=request.user)
+    template_data = {'title': job.title}
+
+    recommendations = []
+    profiles = Profile.objects.filter(show_skills_to_recruiters=True).exclude(skills='').select_related('user')
+    for profile in profiles:
+        matches = matching_skills(job.skills_needed, profile.skills)
+        if matches:
+            recommendations.append({'profile': profile, 'matches': matches})
+
+    return render(request, 'jobs/job_detail.html', {
+        'template_data': template_data,
+        'job': job,
+        'recommendations': recommendations,
+    })

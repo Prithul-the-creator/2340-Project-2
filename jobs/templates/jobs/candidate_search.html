@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="masthead bg-index text-white text-center py-4">
+  <div class="container pt-2"><h2>Find Candidates</h2><p>Search by skills.</p></div>
+</header>
+<div class="container py-4">
+  {% if messages %}
+    {% for message in messages %}<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>{% endfor %}
+  {% endif %}
+  <form method="get" class="row g-3">
+    <div class="col-md-9">
+      <label class="form-label" for="skills">Skills</label>
+      <input class="form-control" id="skills" name="skills" value="{{ filters.skills }}" placeholder="Python, Java, Collaboration, etc.">
+    </div>
+    <div class="col-md-3 d-flex align-items-end gap-2">
+      <button class="btn btn-primary" type="submit">Search</button>
+      <button class="btn btn-outline-secondary" type="submit" formaction="{% url 'jobs.save_search' %}" title="Save this search">
+        <i class="fas fa-bookmark"></i>
+      </button>
+    </div>
+  </form>
+  <div class="mt-4">
+    {% for candidate in candidates %}
+      <article class="border rounded p-3 mb-3">
+        <h3>{{ candidate.profile.user.get_username }}</h3>
+        {% if candidate.profile.headline and candidate.profile.show_headline_to_recruiters %}<p>{{ candidate.profile.headline }}</p>{% endif %}
+        <p><strong>Skills:</strong> {{ candidate.profile.skills }}</p>
+        {% if candidate.matches %}<p class="text-success">Matches: {{ candidate.matches|join:", " }}</p>{% endif %}
+      </article>
+    {% empty %}<p class="text-muted mt-3">No candidates match those filters.</p>{% endfor %}
+  </div>
+</div>
+{% endblock content %}

@@ -30,6 +30,13 @@
             {% endif %}
             {% if perms.jobs.view_application %}
             <a class="nav-link" href="{% url 'jobs.recruiter_jobs' %}">My Jobs</a>
+            <a class="nav-link" href="{% url 'jobs.candidate_search' %}">Find Candidates</a>
+            <a class="nav-link position-relative" href="{% url 'jobs.notifications' %}">
+              <i class="fas fa-envelope"></i>
+              {% if unread_notification_count %}
+              <span class="badge rounded-pill bg-danger">{{ unread_notification_count }}</span>
+              {% endif %}
+            </a>
             {% endif %}
             {% if user.is_staff %}
             <a class="nav-link" href="{% url 'admin:index' %}">Admin</a>

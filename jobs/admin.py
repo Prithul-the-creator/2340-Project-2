@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.db.models import Q
-from .models import Application, Job
+from .models import Application, Job, Notification, SavedSearch
 
 
 class JobAdmin(admin.ModelAdmin):
@@ -27,3 +27,5 @@ class ApplicationAdmin(admin.ModelAdmin):
 
 admin.site.register(Job, JobAdmin)
 admin.site.register(Application, ApplicationAdmin)
+admin.site.register(SavedSearch)
+admin.site.register(Notification)

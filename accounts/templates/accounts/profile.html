@@ -12,9 +12,11 @@
       <div class="col mx-auto text-center mb-3">
         {% if seeker_profile %}
           <h3>{{ seeker_profile.headline }}</h3>
+          <p><strong>Location:</strong> {{ seeker_profile.location }}</p>
           <p><strong>Skills:</strong> {{ seeker_profile.skills }}</p>
           <p><strong>Education:</strong> {{ seeker_profile.education }}</p>
           <p><strong>Experience:</strong> {{ seeker_profile.work_experience }}</p>
+          <p><strong>Projects:</strong> {{ seeker_profile.projects|linebreaksbr }}</p>
           <p><strong>Links:</strong> {{ seeker_profile.links|linebreaksbr }}</p>
         {% else %}
           <p class="text-muted">You haven’t added your seeker profile yet.</p>

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
 <header class="masthead bg-index text-white text-center py-4">
-  <div class="container pt-2"><h2>Find Candidates</h2><p>Search by skills.</p></div>
+  <div class="container pt-2"><h2>Find Candidates</h2><p>Search by skills, location, and projects.</p></div>
 </header>
 <div class="container py-4">
   {% if messages %}
@@ -9,6 +9,14 @@
   {% endif %}
   <form method="get" class="row g-3">
     {% csrf_token %}
+    <div class="col-md-6">
+      <label class="form-label" for="location">Location</label>
+      <input class="form-control" id="location" name="location" value="{{ location }}" placeholder="Atlanta, GA">
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="projects">Projects</label>
+      <input class="form-control" id="projects" name="projects" value="{{ projects }}" placeholder="e.g. chess engine, React">
+    </div>
     <div class="col-12">
       <label class="form-label">Skills</label>
       <div class="skill-checklist skill-checklist-wide">
@@ -32,7 +40,9 @@
       <article class="border rounded p-3 mb-3">
         <h3>{{ candidate.profile.user.get_username }}</h3>
         {% if candidate.profile.headline and candidate.profile.show_headline_to_recruiters %}<p>{{ candidate.profile.headline }}</p>{% endif %}
-        <p><strong>Skills:</strong> {{ candidate.profile.skills }}</p>
+        {% if candidate.profile.location and candidate.profile.show_location_to_recruiters %}<p><strong>Location:</strong> {{ candidate.profile.location }}</p>{% endif %}
+        {% if candidate.profile.skills and candidate.profile.show_skills_to_recruiters %}<p><strong>Skills:</strong> {{ candidate.profile.skills }}</p>{% endif %}
+        {% if candidate.profile.projects and candidate.profile.show_projects_to_recruiters %}<p><strong>Projects:</strong><br>{{ candidate.profile.projects|linebreaksbr }}</p>{% endif %}
         {% if candidate.matches %}<p class="text-success">Matches: {{ candidate.matches|join:", " }}</p>{% endif %}
       </article>
     {% empty %}<p class="text-muted mt-3">No candidates match those filters.</p>{% endfor %}

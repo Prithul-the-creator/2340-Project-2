@@ -9,12 +9,14 @@ from django.views.decorators.http import require_POST
 
 from profiles.models import Profile
 
-from .forms import ApplicationForm
+from .forms import ApplicationForm, JobForm
 from .models import SKILL_OPTIONS, Application, Job, Notification, SavedSearch, matching_skills, split_skills
 
 PROFILE_FIELDS = [
     ('headline', 'Headline', 'show_headline_to_recruiters'),
+    ('location', 'Location', 'show_location_to_recruiters'),
     ('skills', 'Skills', 'show_skills_to_recruiters'),
+    ('projects', 'Projects', 'show_projects_to_recruiters'),
     ('education', 'Education', 'show_education_to_recruiters'),
     ('work_experience', 'Experience', 'show_work_experience_to_recruiters'),
     ('links', 'Links', 'show_links_to_recruiters'),
@@ -196,13 +198,25 @@ def review_application_status(request, application_id):
 def candidate_search(request):
     template_data = {'title': 'Find Candidates'}
     skills_wanted = ', '.join(request.GET.getlist('skills'))
+    location_wanted = request.GET.get('location', '').strip()
+    projects_wanted = request.GET.get('projects', '').strip()
+
+    profiles = Profile.objects.select_related('user')
+    if location_wanted:
+        profiles = profiles.filter(show_location_to_recruiters=True, location__icontains=location_wanted)
+    if projects_wanted:
+        profiles = profiles.filter(show_projects_to_recruiters=True, projects__icontains=projects_wanted)
 
     candidates = []
-    profiles = Profile.objects.filter(show_skills_to_recruiters=True).exclude(skills='').select_related('user')
     for profile in profiles:
-        matches = matching_skills(skills_wanted, profile.skills) if skills_wanted else []
-        if skills_wanted and not matches:
+        if not visible_profile_fields(profile):
             continue
+        matches = []
+        if skills_wanted:
+            if profile.show_skills_to_recruiters:
+                matches = matching_skills(skills_wanted, profile.skills)
+            if not matches:
+                continue
         candidates.append({'profile': profile, 'matches': matches})
 
     return render(request, 'jobs/candidate_search.html', {
@@ -210,6 +224,8 @@ def candidate_search(request):
         'candidates': candidates,
         'skill_options': SKILL_OPTIONS,
         'selected_skills': set(request.GET.getlist('skills')),
+        'location': location_wanted,
+        'projects': projects_wanted,
     })
 
 
@@ -256,4 +272,46 @@ def job_detail(request, job_id):
         'job': job,
         'job_skills': split_skills(job.skills_needed),
         'recommendations': recommendations,
+    })
+
+
+@login_required
+@permission_required('jobs.view_application', raise_exception=True)
+def create_job(request):
+    template_data = {'title': 'Post a Job'}
+    if request.method == 'POST':
+        form = JobForm(request.POST)
+        if form.is_valid():
+            job = form.save(commit=False)
+            job.owner = request.user
+            job.save()
+            messages.success(request, f'Job "{job.title}" created successfully.')
+            return redirect('jobs.recruiter_jobs')
+    else:
+        form = JobForm()
+
+    return render(request, 'jobs/job_form.html', {
+        'template_data': template_data,
+        'form': form,
+    })
+
+
+@login_required
+@permission_required('jobs.view_application', raise_exception=True)
+def edit_job(request, job_id):
+    job = get_object_or_404(Job, pk=job_id, owner=request.user)  # makes sure that only the original poster can edit their own job
+    template_data = {'title': f'Edit {job.title}'}
+    if request.method == 'POST':
+        form = JobForm(request.POST, instance=job)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Job "{job.title}" updated successfully.')
+            return redirect('jobs.recruiter_jobs')
+    else:
+        form = JobForm(instance=job)
+
+    return render(request, 'jobs/job_form.html', {
+        'template_data': template_data,
+        'form': form,
+        'job': job,
     })

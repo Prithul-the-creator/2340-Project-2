@@ -298,3 +298,28 @@ def edit_job(request, job_id):
         'form': form,
         'job': job,
     })
+
+@login_required
+def recommended_jobs(request):
+    if is_recruiter(request.user):
+        return redirect('jobs.candidate_search')
+    template_data = {'title': 'Recommended Jobs'}
+    profile = Profile.objects.filter(user = request.user).first()
+    seeker_skills = profile.skills if profile else ''
+    recommendations = []
+    if seeker_skills:
+        applied_job_ids = Application.objects.filter(user = request.user).values_list('job_id', flat = True)
+        for job in Job.objects.exclude(id__in = applied_job_ids): #I filtered out positions I already applied
+            matches = matching_skills(seeker_skills, job.skills_needed)
+            if matches:
+                recommendations.append({
+                    'job': job,
+                    'skills': split_skills(job.skills_needed),
+                    'matches': matches,
+                })
+        recommendations.sort(key = lambda rec: len(rec['matches']), reverse = True) #jobs with matching skills come first
+    return render(request, 'jobs/recommended_jobs.html', {
+        'template_data': template_data,
+        'recommendations': recommendations,
+        'has_skills': bool(seeker_skills),
+    })

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<header class="masthead bg-index text-white text-center py-4">
+  <div class="container pt-2"><h2>Recommended Jobs</h2><p>Jobs that match your skillset.</p></div>
+</header>
+<div class="container py-4">
+  {% if messages %}
+    {% for message in messages %}<div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>{% endfor %}
+  {% endif %}
+  <div class="row g-4">
+    <section class="col">
+      <p class="text-muted">{{ recommendations|length }} role{{ recommendations|length|pluralize }} found</p>
+      {% for recommendation in recommendations %}
+        {% with job=recommendation.job %}
+        <article class="border rounded p-3 mb-3">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+              <div class="text-muted small">{{ job.company }}</div>
+              <h3 class="mb-1">{{ job.title }}</h3>
+              <div class="mb-2">
+                <span class="badge text-bg-light border">{{ job.get_employment_type_display }}</span>
+                <span class="badge text-bg-light border">{{ job.location }}</span>
+                {% if job.remote_work %}<span class="badge text-bg-light border">Remote</span>{% endif %}
+                {% if job.visa_sponsorship %}<span class="badge text-bg-light border">Visa sponsorship</span>{% endif %}
+              </div>
+            </div>
+            {% if job.salary %}
+              <div class="fw-semibold">
+                {% if job.employment_type == 'intern' %}${{ job.salary }}/hr{% else %}${{ job.salary }}/yr{% endif %}
+              </div>
+            {% endif %}
+          </div>
+          {% if recommendation.skills %}
+            <div class="mb-2">
+              {% for skill in recommendation.skills %}<span class="badge {% if skill in recommendation.matches %} text-bg-sucess{% else %}text-bg-light border{% endif %}">{{ skill }}</span>{% endfor %}
+            </div>
+          {% endif %}
+          <div class="mt-3">
+              <form method="post" action="{% url 'jobs.apply' job.id %}">
+                {% csrf_token %}
+                <label class="form-label" for="note-{{ job.id }}">Note to the recruiter</label>
+                <textarea class="form-control mb-2" id="note-{{ job.id }}" name="note" rows="2" maxlength="1000" required placeholder="Add a short note about why this role interests you"></textarea>
+                <button class="btn btn-primary btn-sm" type="submit">Apply with note</button>
+              </form>
+          </div>
+        </article>
+        {% endwith %}
+      {% empty %}
+        {% if has_skills %}
+            <p class ="text-muted mt-3">No recommendations so far. <a href = "{% url 'jobs.index' %}">Browse all jobs.</a></p>
+        {% else %}
+            <p class ="text-muted mt-3">Add skills to your <a href="{% url 'accounts.profile' %}">profile</a> to get recommendations.</p>
+        {%endif%}
+      {% endfor %}
+    </section>
+  </div>
+</div>
+{% endblock content %}

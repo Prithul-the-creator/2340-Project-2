@@ -14,4 +14,5 @@ urlpatterns = [
     path('notifications/', views.notifications, name='jobs.notifications'),
     path('mine/new/', views.create_job, name='jobs.create_job'),
     path('mine/<int:job_id>/edit/', views.edit_job, name='jobs.edit_job'),
+    path('recommended/', views.recommended_jobs, name='jobs.recommended_positions')
 ]

@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 from profiles.models import Profile
 
 from .forms import ApplicationForm, JobForm
-from .models import SKILL_OPTIONS, Application, Job, Notification, SavedSearch, matching_skills, split_skills
+from .models import SKILL_OPTIONS, Application, Cart, Job, Notification, SavedSearch, matching_skills, split_skills
 
 PROFILE_FIELDS = [
     ('headline', 'Headline', 'show_headline_to_recruiters'),
@@ -74,6 +74,8 @@ def index(request):
 
     applied_job_ids = set(Application.objects.filter(user=request.user).values_list('job_id', flat=True)) \
         if request.user.is_authenticated else set()
+    cart_job_ids = set(Cart.objects.filter(user=request.user).values_list('job_id', flat=True)) \
+        if request.user.is_authenticated else set()
     listings = [{'job': job, 'skills': split_skills(job.skills_needed)} for job in job_matches]
 
     return render(request, 'jobs/job_search.html', {
@@ -83,6 +85,7 @@ def index(request):
         'skill_options': SKILL_OPTIONS,
         'selected_skills': set(skills_desired),
         'applied_job_ids': applied_job_ids,
+        'cart_job_ids': cart_job_ids,
     })
 
 
@@ -322,4 +325,43 @@ def recommended_jobs(request):
         'template_data': template_data,
         'recommendations': recommendations,
         'has_skills': bool(seeker_skills),
+        'cart_job_ids': set(Cart.objects.filter(user=request.user).values_list('job_id', flat=True)),
     })
+
+
+@login_required
+def cart(request):
+    if is_recruiter(request.user):
+        return redirect('jobs.candidate_search')
+
+    template_data = {'title': 'Cart'}
+    cart_items = Cart.objects.filter(user=request.user).select_related('job').order_by('-added_at')
+    listings = [{'job': item.job, 'skills': split_skills(item.job.skills_needed)} for item in cart_items]
+
+    return render(request, 'jobs/cart.html', {
+        'template_data': template_data,
+        'listings': listings,
+    })
+
+
+@login_required
+@require_POST
+def add_to_cart(request, job_id):
+    if is_recruiter(request.user):
+        return redirect('jobs.candidate_search')
+
+    job = get_object_or_404(Job, pk=job_id)
+    cart_item, created = Cart.objects.get_or_create(user=request.user, job=job)
+    if created:
+        messages.success(request, f'{job.title} at {job.company} was added to your cart.')
+    else:
+        messages.info(request, 'This job is already in your cart.')
+    return redirect('jobs.index')
+
+
+@login_required
+@require_POST
+def remove_from_cart(request, job_id):
+    Cart.objects.filter(user=request.user, job_id=job_id).delete()
+    messages.success(request, 'Job removed from your cart.')
+    return redirect('jobs.cart')

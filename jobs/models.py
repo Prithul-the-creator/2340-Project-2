@@ -48,6 +48,20 @@ class Job(models.Model):
         return f'{self.title} at {self.company}'
 
 
+class Cart(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'job'], name='unique_user_job_cart'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} saved {self.job}'
+
+
 class Application(models.Model):
     class Status(models.TextChoices):
         APPLIED = 'applied', 'Applied'

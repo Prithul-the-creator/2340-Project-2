@@ -96,6 +96,10 @@
                 <textarea class="form-control mb-2" id="note-{{ job.id }}" name="note" rows="2" maxlength="1000" required placeholder="Add a short note about why this role interests you"></textarea>
                 <button class="btn btn-primary btn-sm" type="submit">Apply with note</button>
               </form>
+              <form method="post" class="mt-2" action="{% if job.id in cart_job_ids %}{% url 'jobs.remove_from_cart' job.id %}{% else %}{% url 'jobs.add_to_cart' job.id %}{% endif %}">
+                {% csrf_token %}
+                <button class="btn btn-outline-secondary btn-sm" type="submit">{% if job.id in cart_job_ids %}Remove from cart{% else %}Add to cart{% endif %}</button>
+              </form>
             {% endif %}
           </div>
         </article>

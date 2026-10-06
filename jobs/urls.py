@@ -14,5 +14,8 @@ urlpatterns = [
     path('notifications/', views.notifications, name='jobs.notifications'),
     path('mine/new/', views.create_job, name='jobs.create_job'),
     path('mine/<int:job_id>/edit/', views.edit_job, name='jobs.edit_job'),
-    path('recommended/', views.recommended_jobs, name='jobs.recommended_positions')
+    path('recommended/', views.recommended_jobs, name='jobs.recommended_positions'),
+    path('cart/', views.cart, name='jobs.cart'),
+    path('<int:job_id>/cart/add/', views.add_to_cart, name='jobs.add_to_cart'),
+    path('<int:job_id>/cart/remove/', views.remove_from_cart, name='jobs.remove_from_cart'),
 ]

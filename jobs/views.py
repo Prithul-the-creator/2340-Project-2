@@ -106,6 +106,7 @@ def apply(request, job_id):
         job=job,
         defaults={'note': form.cleaned_data['note']},
     )
+    Cart.objects.filter(user=request.user, job=job).delete()
     if created:
         messages.success(request, f'Your application to {job.title} at {job.company} was sent.')
     else:
@@ -351,6 +352,10 @@ def add_to_cart(request, job_id):
         return redirect('jobs.candidate_search')
 
     job = get_object_or_404(Job, pk=job_id)
+    if Application.objects.filter(user=request.user, job=job).exists():
+        messages.info(request, 'You have already applied to this job.')
+        return redirect('jobs.index')
+
     cart_item, created = Cart.objects.get_or_create(user=request.user, job=job)
     if created:
         messages.success(request, f'{job.title} at {job.company} was added to your cart.')
